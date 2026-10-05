@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Modules\Shared\Presentation\Support\MoneyFormatter;
 use Illuminate\Foundation\Console\ServeCommand;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -27,5 +29,10 @@ class AppServiceProvider extends ServiceProvider
         if (PHP_OS_FAMILY === 'Windows') {
             ServeCommand::$passthroughVariables[] = 'SystemRoot';
         }
+
+        // @money($price) in any Blade view prints poisha as ৳1,250.
+        Blade::directive('money', function (string $expression): string {
+            return '<?php echo e(app(\''.MoneyFormatter::class.'\')->format('.$expression.')); ?>';
+        });
     }
 }
