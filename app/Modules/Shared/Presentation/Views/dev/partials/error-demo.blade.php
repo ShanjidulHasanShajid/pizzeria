@@ -1,0 +1,1 @@
+<x-form.input name="email" label="Email" type="email" value="not-an-email" />
