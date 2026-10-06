@@ -1,0 +1,2 @@
+@props(['for', 'required' => false])
+<label for="{{ $for }}" {{ $attributes->class('mb-1 block text-sm font-medium text-ink') }}>{{ $slot }}@if ($required)<span class="text-brand-700" aria-hidden="true"> *</span>@endif</label>

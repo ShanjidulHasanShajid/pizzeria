@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Modules\Shared\Presentation\Support\MoneyFormatter;
 use Illuminate\Foundation\Console\ServeCommand;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
@@ -34,5 +35,8 @@ class AppServiceProvider extends ServiceProvider
         Blade::directive('money', function (string $expression): string {
             return '<?php echo e(app(\''.MoneyFormatter::class.'\')->format('.$expression.')); ?>';
         });
+
+        // Every ->links() call uses our branded pagination view.
+        Paginator::defaultView('vendor.pagination.brand');
     }
 }

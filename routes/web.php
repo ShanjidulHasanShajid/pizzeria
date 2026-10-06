@@ -2,8 +2,5 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Route;
-
-Route::get('/', function () {
-    return view('welcome');
-});
+// Web routes live in each module: app/Modules/<Module>/Presentation/Routes/storefront.php
+// (also admin.php and account.php). This file is intentionally empty.
