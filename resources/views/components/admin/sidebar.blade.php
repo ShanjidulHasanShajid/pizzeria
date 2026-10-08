@@ -1,29 +1,39 @@
 @php
-    // [label, route name]. A link goes live automatically as soon as a later phase defines the route.
+    // [label, route name, gate]. A link shows only if the current user passes the gate.
+    // A link is clickable only once a later phase defines the route.
     $groups = [
-        ['label' => null, 'items' => [['Dashboard', 'admin.dashboard'], ['Orders', 'admin.orders.index']]],
+        ['label' => null, 'items' => [['Dashboard', 'admin.dashboard', 'access-admin'], ['Orders', 'admin.orders.index', 'manage-orders']]],
         ['label' => 'Catalog', 'items' => [
-            ['Categories', 'admin.categories.index'], ['Products', 'admin.products.index'],
-            ['Size Tiers', 'admin.size-tiers.index'], ['Tags', 'admin.tags.index'],
-            ['Kitchen Stations', 'admin.kitchen-stations.index'], ['Option Groups', 'admin.option-groups.index'],
-            ['Combos', 'admin.combos.index'], ['Pizza Builder', 'admin.pizza-builder.edit'],
+            ['Categories', 'admin.categories.index', 'manage-catalog'], ['Products', 'admin.products.index', 'manage-catalog'],
+            ['Size Tiers', 'admin.size-tiers.index', 'manage-catalog'], ['Tags', 'admin.tags.index', 'manage-catalog'],
+            ['Kitchen Stations', 'admin.kitchen-stations.index', 'manage-catalog'], ['Option Groups', 'admin.option-groups.index', 'manage-catalog'],
+            ['Combos', 'admin.combos.index', 'manage-catalog'], ['Pizza Builder', 'admin.pizza-builder.edit', 'manage-catalog'],
         ]],
         ['label' => 'Content', 'items' => [
-            ['Home', 'admin.home.edit'], ['Banners', 'admin.banners.index'], ['Gallery', 'admin.gallery.index'],
-            ['Navigation', 'admin.navigation.index'], ['Pages', 'admin.pages.index'],
-            ['FAQs', 'admin.faqs.index'], ['Locations', 'admin.locations.index'],
+            ['Home', 'admin.home.edit', 'manage-content'], ['Banners', 'admin.banners.index', 'manage-content'], ['Gallery', 'admin.gallery.index', 'manage-content'],
+            ['Navigation', 'admin.navigation.index', 'manage-content'], ['Pages', 'admin.pages.index', 'manage-content'],
+            ['FAQs', 'admin.faqs.index', 'manage-content'], ['Locations', 'admin.locations.index', 'manage-content'],
         ]],
-        ['label' => 'Sales', 'items' => [['Delivery Zones', 'admin.delivery-zones.index'], ['Coupons', 'admin.coupons.index']]],
-        ['label' => 'People', 'items' => [['Customers', 'admin.customers.index'], ['Admin Users', 'admin.admin-users.index']]],
+        ['label' => 'Sales', 'items' => [['Delivery Zones', 'admin.delivery-zones.index', 'manage-sales'], ['Coupons', 'admin.coupons.index', 'manage-sales']]],
+        ['label' => 'People', 'items' => [['Customers', 'admin.customers.index', 'manage-customers'], ['Admin Users', 'admin.admin-users.index', 'manage-admin-users']]],
         ['label' => null, 'items' => [
-            ['Reviews', 'admin.reviews.index'], ['Messages', 'admin.messages.index'],
-            ['Settings', 'admin.settings.edit'], ['Trash', 'admin.trash.index'],
+            ['Reviews', 'admin.reviews.index', 'manage-content'], ['Messages', 'admin.messages.index', 'manage-content'],
+            ['Settings', 'admin.settings.edit', 'manage-settings'], ['Trash', 'admin.trash.index', 'access-admin-sections'],
         ]],
     ];
 
     if (! app()->isProduction()) {
-        $groups[] = ['label' => 'Development', 'items' => [['UI kit', 'admin.ui-kit']]];
+        $groups[] = ['label' => 'Development', 'items' => [['UI kit', 'admin.ui-kit', 'access-admin-sections']]];
     }
+
+    // Keep only what this user may open, and drop groups that end up empty.
+    $groups = collect($groups)
+        ->map(fn (array $group): array => [
+            'label' => $group['label'],
+            'items' => array_values(array_filter($group['items'], fn (array $item): bool => Gate::allows($item[2]))),
+        ])
+        ->filter(fn (array $group): bool => $group['items'] !== [])
+        ->all();
 @endphp
 
 <div x-show="sidebar" x-cloak class="fixed inset-0 z-40 bg-ink/60 lg:hidden" x-on:click="sidebar = false" aria-hidden="true"></div>

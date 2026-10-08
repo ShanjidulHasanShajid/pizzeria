@@ -21,9 +21,15 @@
         </form>
 
         <div class="ml-auto flex items-center gap-1 md:ml-0">
-            <a href="{{ url('/login') }}" class="hidden items-center gap-2 rounded-btn px-3 py-2 text-sm font-semibold hover:bg-brand-50 md:inline-flex">
-                <x-icon name="user" class="h-5 w-5" /> Account
-            </a>
+            @auth
+                <a href="{{ route('account.dashboard') }}" class="hidden items-center gap-2 rounded-btn px-3 py-2 text-sm font-semibold hover:bg-brand-50 md:inline-flex">
+                    <x-icon name="user" class="h-5 w-5" /> {{ Str::of(auth()->user()->name)->before(' ') }}
+                </a>
+            @else
+                <a href="{{ route('login') }}" class="hidden items-center gap-2 rounded-btn px-3 py-2 text-sm font-semibold hover:bg-brand-50 md:inline-flex">
+                    <x-icon name="user" class="h-5 w-5" /> Sign in
+                </a>
+            @endauth
             <a href="{{ route('cart.show') }}" class="relative rounded-btn p-2 hover:bg-brand-50" aria-label="Cart, {{ $cartCount }} items">
                 <x-icon name="shopping-bag" class="h-6 w-6" />
                 <span class="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-xs font-bold text-white" aria-hidden="true">{{ $cartCount }}</span>
