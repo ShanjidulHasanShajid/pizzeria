@@ -57,7 +57,17 @@
             <ul class="mt-6 space-y-3 text-sm">
                 <li><a href="{{ route('orders.track') }}" class="text-muted">Track order</a></li>
                 <li><a href="{{ route('faq') }}" class="text-muted">Help</a></li>
-                <li><a href="{{ url('/login') }}" class="text-muted">Sign in / Register</a></li>
+                @auth
+                    <li><a href="{{ route('account.dashboard') }}" class="text-muted">My account</a></li>
+                    <li>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="text-muted">Sign out</button>
+                        </form>
+                    </li>
+                @else
+                    <li><a href="{{ route('login') }}" class="text-muted">Sign in / Register</a></li>
+                @endauth
             </ul>
         </nav>
     </div>

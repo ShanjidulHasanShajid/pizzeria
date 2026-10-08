@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Modules\Identity\Infrastructure\Persistence\Models\User;
+
 it('serves every storefront page', function (string $uri): void {
     $this->get($uri)
         ->assertOk()
@@ -31,10 +33,17 @@ it('serves every storefront page', function (string $uri): void {
 
 it('serves the development component pages', function (string $uri): void {
     $this->get($uri)->assertOk();
-})->with(['/ui-kit', '/admin/ui-kit']);
+})->with(['/ui-kit']);
+
+it('serves the admin ui kit to staff', function (): void {
+    $this->actingAs(User::factory()->staff()->create())
+        ->get('/admin/ui-kit')
+        ->assertOk();
+});
 
 it('serves the admin dashboard with the sidebar', function (): void {
-    $this->get('/admin')
+    $this->actingAs(User::factory()->staff()->create())
+        ->get('/admin')
         ->assertOk()
         ->assertSee('Dashboard')
         ->assertSee('Admin sidebar');

@@ -15,7 +15,7 @@
             </button>
         </li>
         <li>
-            <a href="{{ url('/login') }}" class="{{ $itemClass }}">
+            <a href="{{ auth()->check() ? route('account.dashboard') : route('login') }}" class="{{ $itemClass }}">
                 <x-icon name="user" class="h-6 w-6" /> Account
             </a>
         </li>

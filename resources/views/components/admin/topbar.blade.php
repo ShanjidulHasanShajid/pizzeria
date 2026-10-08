@@ -8,16 +8,20 @@
     <div class="ml-auto flex items-center gap-3">
         <a href="{{ route('home') }}" target="_blank" rel="noopener" class="text-sm font-medium text-brand-700 hover:underline">View site</a>
 
+        @php($currentUser = auth()->user())
         <x-dropdown>
             <x-slot:trigger>
                 <button type="button" class="flex items-center gap-2 rounded-btn px-2 py-1.5 hover:bg-stone-100" aria-haspopup="true" x-bind:aria-expanded="open.toString()">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white" aria-hidden="true">A</span>
-                    <span class="hidden text-sm font-medium sm:block">Admin</span>
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white" aria-hidden="true">{{ Str::upper(Str::substr($currentUser->name, 0, 1)) }}</span>
+                    <span class="hidden text-sm font-medium sm:block">{{ $currentUser->name }}</span>
                     <x-icon name="chevron-down" class="h-4 w-4" />
                 </button>
             </x-slot:trigger>
-            <a href="#" role="menuitem" class="block px-4 py-2 text-sm hover:bg-cream">Profile</a>
-            <span role="menuitem" aria-disabled="true" class="block cursor-not-allowed px-4 py-2 text-sm text-stone-500">Sign out (Phase 5)</span>
+            <p class="border-b border-line px-4 py-2 text-xs text-muted">{{ $currentUser->role->label() }}</p>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" role="menuitem" class="block w-full px-4 py-2 text-left text-sm hover:bg-cream">Sign out</button>
+            </form>
         </x-dropdown>
     </div>
 </header>

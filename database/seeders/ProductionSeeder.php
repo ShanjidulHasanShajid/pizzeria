@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Modules\Identity\Infrastructure\Database\Seeders\SuperAdminSeeder;
 use Illuminate\Database\Seeder;
 
 /**
@@ -15,7 +16,7 @@ class ProductionSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            // Phase 5: \App\Modules\Identity\Infrastructure\Database\Seeders\...
+            SuperAdminSeeder::class,
         ]);
     }
 }

@@ -18,11 +18,9 @@ abstract class ModuleServiceProvider extends ServiceProvider
 {
     protected const STOREFRONT_MIDDLEWARE = ['web'];
 
-    protected const ADMIN_MIDDLEWARE = ['web'];
+    protected const ADMIN_MIDDLEWARE = ['web', 'auth', 'staff'];
 
-    protected const ACCOUNT_MIDDLEWARE = ['web'];
-
-    private static bool $factoryResolverRegistered = false;
+    protected const ACCOUNT_MIDDLEWARE = ['web', 'auth'];
 
     abstract protected function moduleName(): string;
 
@@ -120,16 +118,11 @@ abstract class ModuleServiceProvider extends ServiceProvider
     /**
      * Models live in Module/Infrastructure/Persistence/Models, so Laravel's
      * default guess (Database\Factories\XFactory) would not find their
-     * factories. Registered once for all modules.
+     * factories. Every module registers the same closure; the test case
+     * flushes factory state between tests, so it must be set again each boot.
      */
     private function registerFactoryNameResolver(): void
     {
-        if (self::$factoryResolverRegistered) {
-            return;
-        }
-
-        self::$factoryResolverRegistered = true;
-
         Factory::guessFactoryNamesUsing(static function (string $modelName): string {
             $pattern = '/^App\\\\Modules\\\\(\w+)\\\\Infrastructure\\\\Persistence\\\\Models\\\\(\w+)$/';
 
