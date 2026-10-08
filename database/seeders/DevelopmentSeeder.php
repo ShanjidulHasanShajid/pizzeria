@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Modules\Identity\Infrastructure\Database\Seeders\IdentityDevelopmentSeeder;
 use Illuminate\Database\Seeder;
 
 /**
@@ -15,7 +16,8 @@ class DevelopmentSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            ProductionSeeder::class,
+            ProductionSeeder::class,   // already creates the super admin
+            IdentityDevelopmentSeeder::class,
             // Phase 6 and later: module development seeders (menu, sample orders).
         ]);
     }
