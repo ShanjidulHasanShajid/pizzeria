@@ -38,3 +38,9 @@ arch('no debugging functions in app code')
 arch('shared ports are interfaces')
     ->expect('App\Modules\Shared\Application\Ports')
     ->toBeInterfaces();
+
+arch('domain exceptions extend the shared DomainException')
+    ->expect('App\Modules\*\Domain\Exceptions')
+    ->classes()
+    ->toExtend(DomainException::class)
+    ->ignoring(DomainException::class);
