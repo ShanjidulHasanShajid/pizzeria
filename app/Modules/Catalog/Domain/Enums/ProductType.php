@@ -34,4 +34,10 @@ enum ProductType: string
     {
         return $this === self::Builder;
     }
+
+    /** Only a combo can be a gift box (decision 8). */
+    public function canBeGiftable(): bool
+    {
+        return $this === self::Combo;
+    }
 }
