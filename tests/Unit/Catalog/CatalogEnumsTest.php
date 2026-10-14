@@ -31,3 +31,9 @@ it('has a label for every case', function (): void {
         expect($case->label())->not->toBe('');
     }
 });
+
+it('allows the gift flag only on a combo', function (): void {
+    expect(ProductType::Combo->canBeGiftable())->toBeTrue()
+        ->and(ProductType::Standard->canBeGiftable())->toBeFalse()
+        ->and(ProductType::Builder->canBeGiftable())->toBeFalse();
+});
