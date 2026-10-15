@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Infrastructure\Persistence\Models;
 
 use App\Modules\Catalog\Domain\Enums\TagType;
+use App\Modules\Catalog\Infrastructure\Database\Factories\TagFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -26,7 +28,8 @@ use Illuminate\Support\Carbon;
  */
 class Tag extends Model
 {
-    use SoftDeletes;
+    /** @use HasFactory<TagFactory> */
+    use HasFactory, SoftDeletes;
 
     /**
      * @var list<string>

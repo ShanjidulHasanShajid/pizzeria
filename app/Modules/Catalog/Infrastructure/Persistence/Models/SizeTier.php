@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Infrastructure\Persistence\Models;
 
+use App\Modules\Catalog\Infrastructure\Database\Factories\SizeTierFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -23,7 +25,8 @@ use Illuminate\Support\Carbon;
  */
 class SizeTier extends Model
 {
-    use SoftDeletes;
+    /** @use HasFactory<SizeTierFactory> */
+    use HasFactory, SoftDeletes;
 
     /**
      * @var list<string>

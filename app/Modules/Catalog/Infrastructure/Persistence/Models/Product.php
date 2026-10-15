@@ -6,6 +6,8 @@ namespace App\Modules\Catalog\Infrastructure\Persistence\Models;
 
 use App\Modules\Catalog\Domain\Enums\LeadTimeClass;
 use App\Modules\Catalog\Domain\Enums\ProductType;
+use App\Modules\Catalog\Infrastructure\Database\Factories\ProductFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -41,7 +43,8 @@ use Illuminate\Support\Carbon;
  */
 class Product extends Model
 {
-    use SoftDeletes;
+    /** @use HasFactory<ProductFactory> */
+    use HasFactory, SoftDeletes;
 
     /**
      * @var list<string>
