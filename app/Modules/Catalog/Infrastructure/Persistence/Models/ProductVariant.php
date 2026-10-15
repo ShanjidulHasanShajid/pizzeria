@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Infrastructure\Persistence\Models;
 
+use App\Modules\Catalog\Infrastructure\Database\Factories\ProductVariantFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -26,7 +28,8 @@ use Illuminate\Support\Carbon;
  */
 class ProductVariant extends Model
 {
-    use SoftDeletes;
+    /** @use HasFactory<ProductVariantFactory> */
+    use HasFactory, SoftDeletes;
 
     /**
      * product_id is not here: variants are always created through $product->variants()->create(),
