@@ -77,3 +77,19 @@ it('gives the position after the last station that is not deleted', function ():
 
     expect($this->repository->nextSortOrder()->value())->toBe(30);
 });
+
+it('finds a station in the Trash, sees categories in the Trash, and deletes it for good', function (): void {
+    $station = KitchenStationModel::factory()->create(['name' => 'Old Grill']);
+    $category = CategoryModel::factory()->for($station)->create();
+    $category->delete();
+    $station->delete();
+
+    expect($this->repository->findTrashed($station->id)?->name())->toBe('Old Grill')
+        ->and($this->repository->isUsedByCategories($station->id))->toBeFalse()
+        ->and($this->repository->isUsedIncludingTrash($station->id))->toBeTrue();
+
+    $category->forceDelete();
+    $this->repository->forceDelete($station->id);
+
+    $this->assertDatabaseMissing('kitchen_stations', ['id' => $station->id]);
+});

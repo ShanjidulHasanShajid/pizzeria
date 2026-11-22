@@ -87,3 +87,19 @@ it('gives the position after the last size tier that is not deleted', function (
 
     expect($this->repository->nextSortOrder()->value())->toBe(30);
 });
+
+it('finds a size in the Trash, sees removed variants, and deletes it for good', function (): void {
+    $mini = SizeTierModel::factory()->create(['name' => 'Mini']);
+    $variant = ProductVariantModel::factory()->forSizeTier($mini)->create();
+    $variant->delete();
+    $mini->delete();
+
+    expect($this->repository->findTrashed($mini->id)?->name())->toBe('Mini')
+        ->and($this->repository->isInUse($mini->id))->toBeFalse()
+        ->and($this->repository->isUsedIncludingTrash($mini->id))->toBeTrue();
+
+    $variant->forceDelete();
+    $this->repository->forceDelete($mini->id);
+
+    $this->assertDatabaseMissing('size_tiers', ['id' => $mini->id]);
+});

@@ -8,6 +8,7 @@ use App\Modules\Catalog\Application\DTOs\ReorderInput;
 use App\Modules\Catalog\Application\DTOs\UpdateTagInput;
 use App\Modules\Catalog\Application\UseCases\Tags\CreateTag;
 use App\Modules\Catalog\Application\UseCases\Tags\DeleteTag;
+use App\Modules\Catalog\Application\UseCases\Tags\ForceDeleteTag;
 use App\Modules\Catalog\Application\UseCases\Tags\ReorderTags;
 use App\Modules\Catalog\Application\UseCases\Tags\RestoreTag;
 use App\Modules\Catalog\Application\UseCases\Tags\UpdateTag;
@@ -79,4 +80,16 @@ it('saves a new order', function (): void {
 
     expect($this->tags->find($spicy)->sort()->value())->toBe(10)
         ->and($this->tags->find($veg)->sort()->value())->toBe(20);
+});
+
+it('deletes a tag forever, but only from the trash', function (): void {
+    $id = ($this->createTag)('Mild');
+    $forceDelete = new ForceDeleteTag($this->tags);
+
+    expect(fn () => $forceDelete->handle(new CatalogItemInput($id)))->toThrow(EntityNotFound::class);
+
+    $this->tags->delete($id);
+    $forceDelete->handle(new CatalogItemInput($id));
+
+    expect($this->tags->exists($id))->toBeFalse();
 });

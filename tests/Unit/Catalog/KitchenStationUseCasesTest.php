@@ -8,6 +8,7 @@ use App\Modules\Catalog\Application\DTOs\ReorderInput;
 use App\Modules\Catalog\Application\DTOs\UpdateKitchenStationInput;
 use App\Modules\Catalog\Application\UseCases\KitchenStations\CreateKitchenStation;
 use App\Modules\Catalog\Application\UseCases\KitchenStations\DeleteKitchenStation;
+use App\Modules\Catalog\Application\UseCases\KitchenStations\ForceDeleteKitchenStation;
 use App\Modules\Catalog\Application\UseCases\KitchenStations\ReorderKitchenStations;
 use App\Modules\Catalog\Application\UseCases\KitchenStations\RestoreKitchenStation;
 use App\Modules\Catalog\Application\UseCases\KitchenStations\UpdateKitchenStation;
@@ -83,4 +84,25 @@ it('refuses a new order with a station twice or an unknown station', function ()
 
     expect(fn () => $reorder->handle(new ReorderInput([$oven, $oven])))->toThrow(ValidationFailed::class);
     expect(fn () => $reorder->handle(new ReorderInput([$oven, 99])))->toThrow(EntityNotFound::class);
+});
+
+it('deletes a station in the trash forever', function (): void {
+    $id = ($this->createStation)('Old Grill');
+    $this->stations->delete($id);
+
+    (new ForceDeleteKitchenStation($this->stations))->handle(new CatalogItemInput($id));
+
+    expect($this->stations->exists($id))->toBeFalse();
+});
+
+it('deletes a station forever only from the trash, and not while categories in the trash use it', function (): void {
+    $forceDelete = new ForceDeleteKitchenStation($this->stations);
+    $live = ($this->createStation)('Oven');
+    $trashed = ($this->createStation)('Old Grill');
+    $this->stations->markUsedByTrashedCategories($trashed);
+    $this->stations->delete($trashed);
+
+    expect(fn () => $forceDelete->handle(new CatalogItemInput($live)))->toThrow(EntityNotFound::class);
+    expect(fn () => $forceDelete->handle(new CatalogItemInput($trashed)))->toThrow(CatalogItemInUse::class, 'deleted forever');
+    expect($this->stations->exists($trashed))->toBeTrue();
 });

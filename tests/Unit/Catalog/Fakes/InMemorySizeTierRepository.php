@@ -24,6 +24,9 @@ final class InMemorySizeTierRepository implements SizeTierRepository
     /** @var array<int, true> */
     private array $inUse = [];
 
+    /** @var array<int, true> */
+    private array $usedInTrash = [];
+
     private int $nextId = 1;
 
     public function find(int $id): ?SizeTier
@@ -59,6 +62,25 @@ final class InMemorySizeTierRepository implements SizeTierRepository
         }
 
         unset($this->deleted[$id]);
+    }
+
+    public function findTrashed(int $id): ?SizeTier
+    {
+        return isset($this->deleted[$id]) ? clone $this->sizeTiers[$id] : null;
+    }
+
+    public function isUsedIncludingTrash(int $id): bool
+    {
+        return isset($this->inUse[$id]) || isset($this->usedInTrash[$id]);
+    }
+
+    public function forceDelete(int $id): void
+    {
+        if (! isset($this->deleted[$id])) {
+            throw EntityNotFound::withId('Size tier', $id);
+        }
+
+        unset($this->sizeTiers[$id], $this->deleted[$id]);
     }
 
     /** Looks at deleted ones too, like the real repository. */
@@ -101,5 +123,16 @@ final class InMemorySizeTierRepository implements SizeTierRepository
     public function isDeleted(int $id): bool
     {
         return isset($this->deleted[$id]);
+    }
+
+    /** A removed variant, or a variant of a product in the Trash, still uses this size. */
+    public function markUsedInTrash(int $id): void
+    {
+        $this->usedInTrash[$id] = true;
+    }
+
+    public function exists(int $id): bool
+    {
+        return isset($this->sizeTiers[$id]);
     }
 }

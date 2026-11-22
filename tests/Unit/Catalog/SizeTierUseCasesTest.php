@@ -8,11 +8,13 @@ use App\Modules\Catalog\Application\DTOs\ReorderInput;
 use App\Modules\Catalog\Application\DTOs\UpdateSizeTierInput;
 use App\Modules\Catalog\Application\UseCases\SizeTiers\CreateSizeTier;
 use App\Modules\Catalog\Application\UseCases\SizeTiers\DeleteSizeTier;
+use App\Modules\Catalog\Application\UseCases\SizeTiers\ForceDeleteSizeTier;
 use App\Modules\Catalog\Application\UseCases\SizeTiers\ReorderSizeTiers;
 use App\Modules\Catalog\Application\UseCases\SizeTiers\RestoreSizeTier;
 use App\Modules\Catalog\Application\UseCases\SizeTiers\ToggleSizeTierActive;
 use App\Modules\Catalog\Application\UseCases\SizeTiers\UpdateSizeTier;
 use App\Modules\Catalog\Domain\Exceptions\CatalogItemInUse;
+use App\Modules\Shared\Domain\Exceptions\EntityNotFound;
 use App\Modules\Shared\Domain\Exceptions\ValidationFailed;
 use App\Modules\Shared\Domain\Services\SlugGenerator;
 use Tests\Unit\Catalog\Fakes\InMemorySizeTierRepository;
@@ -115,5 +117,28 @@ describe('deleting and order', function (): void {
 
         expect($this->sizeTiers->find($medium)->sort()->value())->toBe(10)
             ->and($this->sizeTiers->find($personal)->sort()->value())->toBe(20);
+    });
+});
+
+describe('deleting forever', function (): void {
+    it('deletes a size in the trash forever', function (): void {
+        $id = ($this->createSize)('Mini');
+        $this->sizeTiers->delete($id);
+
+        (new ForceDeleteSizeTier($this->sizeTiers))->handle(new CatalogItemInput($id));
+
+        expect($this->sizeTiers->exists($id))->toBeFalse();
+    });
+
+    it('deletes a size forever only from the trash, and not while old variants still use it', function (): void {
+        $forceDelete = new ForceDeleteSizeTier($this->sizeTiers);
+        $live = ($this->createSize)('Personal');
+        $trashed = ($this->createSize)('Mini');
+        $this->sizeTiers->markUsedInTrash($trashed);
+        $this->sizeTiers->delete($trashed);
+
+        expect(fn () => $forceDelete->handle(new CatalogItemInput($live)))->toThrow(EntityNotFound::class);
+        expect(fn () => $forceDelete->handle(new CatalogItemInput($trashed)))->toThrow(CatalogItemInUse::class, 'deleted forever');
+        expect($this->sizeTiers->exists($trashed))->toBeTrue();
     });
 });
