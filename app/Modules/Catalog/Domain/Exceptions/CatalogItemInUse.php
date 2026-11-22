@@ -36,4 +36,14 @@ final class CatalogItemInUse extends DomainException
     {
         return new self("\"{$name}\" cannot be deleted forever: products or sub-categories still belong to it, maybe in the Trash. Delete those forever first.");
     }
+
+    public static function kitchenStationStillReferenced(string $name): self
+    {
+        return new self("\"{$name}\" cannot be deleted forever: categories still use it, maybe in the Trash. Give them another kitchen station or delete them forever first.");
+    }
+
+    public static function sizeTierStillReferenced(string $name): self
+    {
+        return new self("\"{$name}\" cannot be deleted forever: product variants still use it, also removed variants and products in the Trash. Delete those products forever first, or keep the size in the Trash.");
+    }
 }

@@ -24,6 +24,12 @@ interface TagRepository
     /** Looks at deleted rows too. $ignoreId skips the tag that is being edited. */
     public function slugExists(Slug $slug, ?int $ignoreId = null): bool;
 
+    /** A tag that is in the Trash, or null. */
+    public function findTrashed(int $id): ?Tag;
+
+    /** Deletes a tag that is in the Trash for good. The database removes its product links. */
+    public function forceDelete(int $id): void;
+
     /** The position after the last item that is not deleted: 10 for the first one, then +10. */
     public function nextSortOrder(): SortOrder;
 }

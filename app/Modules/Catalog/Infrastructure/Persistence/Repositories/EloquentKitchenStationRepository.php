@@ -44,6 +44,23 @@ final class EloquentKitchenStationRepository implements KitchenStationRepository
         KitchenStationModel::onlyTrashed()->findOrFail($id)->restore();
     }
 
+    public function findTrashed(int $id): ?KitchenStation
+    {
+        $model = KitchenStationModel::onlyTrashed()->find($id);
+
+        return $model === null ? null : $this->toEntity($model);
+    }
+
+    public function isUsedIncludingTrash(int $id): bool
+    {
+        return CategoryModel::withTrashed()->where('kitchen_station_id', $id)->exists();
+    }
+
+    public function forceDelete(int $id): void
+    {
+        KitchenStationModel::onlyTrashed()->findOrFail($id)->forceDelete();
+    }
+
     public function isUsedByCategories(int $id): bool
     {
         // Deleted categories are left out automatically (SoftDeletes).

@@ -46,6 +46,25 @@ final class EloquentSizeTierRepository implements SizeTierRepository
         SizeTierModel::onlyTrashed()->findOrFail($id)->restore();
     }
 
+    public function findTrashed(int $id): ?SizeTier
+    {
+        $model = SizeTierModel::onlyTrashed()->find($id);
+
+        return $model === null ? null : $this->toEntity($model);
+    }
+
+    public function isUsedIncludingTrash(int $id): bool
+    {
+        // withTrashed(): removed variants keep their row (old orders point to it).
+        // Variants of a product in the Trash are not deleted themselves, so they count anyway.
+        return ProductVariantModel::withTrashed()->where('size_tier_id', $id)->exists();
+    }
+
+    public function forceDelete(int $id): void
+    {
+        SizeTierModel::onlyTrashed()->findOrFail($id)->forceDelete();
+    }
+
     public function slugExists(Slug $slug, ?int $ignoreId = null): bool
     {
         $query = SizeTierModel::withTrashed()->where('slug', $slug->value());
