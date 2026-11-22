@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Application\Queries;
 
+use App\Modules\Catalog\Application\DTOs\AdminCategoryDetail;
+use App\Modules\Catalog\Application\DTOs\AdminCategoryFilter;
 use App\Modules\Catalog\Application\DTOs\AdminCategoryRow;
 use App\Modules\Catalog\Application\DTOs\AdminProductFilter;
 use App\Modules\Catalog\Application\DTOs\AdminProductPage;
@@ -18,12 +20,13 @@ use App\Modules\Catalog\Application\DTOs\TrashedCatalogItem;
 interface AdminCatalogQuery
 {
     /**
-     * Every category that is not deleted: each top-level category followed by its
-     * sub-categories, in sort order.
+     * Without a filter: every category that is not deleted, each top-level category followed
+     * by its sub-categories, in sort order. With a search or a status: a flat list of the
+     * matching categories (status "trashed" lists the Trash).
      *
      * @return list<AdminCategoryRow>
      */
-    public function categoryTable(): array;
+    public function categoryTable(AdminCategoryFilter $filter = new AdminCategoryFilter): array;
 
     public function productTable(AdminProductFilter $filter): AdminProductPage;
 
@@ -63,4 +66,14 @@ interface AdminCatalogQuery
 
     /** One tag that is not deleted, or null. */
     public function tag(int $id): ?TagRow;
+
+    /** One category that is not deleted, for the edit form, or null. */
+    public function category(int $id): ?AdminCategoryDetail;
+
+    /**
+     * Top-level categories that are not deleted, for the "Parent" choice: id => name, in sort order.
+     *
+     * @return array<int, string>
+     */
+    public function topLevelCategoryOptions(): array;
 }

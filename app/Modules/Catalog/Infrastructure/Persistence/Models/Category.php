@@ -31,6 +31,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  * @property-read int|null $products_count only after withCount('products')
+ * @property-read int|null $children_count only after withCount('children')
  */
 class Category extends Model
 {

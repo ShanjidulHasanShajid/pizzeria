@@ -134,3 +134,41 @@ it('knows when a sub-category that is not deleted belongs to a category', functi
 
     expect($this->repository->hasChildren($drinks->id))->toBeFalse();
 });
+
+it('gives the position after the last category with the same parent', function (): void {
+    expect($this->repository->nextSortOrder(null)->value())->toBe(10);
+
+    $drinks = CategoryModel::factory()->create(['sort' => 20]);
+    CategoryModel::factory()->create(['sort' => 90])->delete();
+    CategoryModel::factory()->childOf($drinks)->create(['sort' => 40]);
+
+    expect($this->repository->nextSortOrder(null)->value())->toBe(30)
+        ->and($this->repository->nextSortOrder($drinks->id)->value())->toBe(50)
+        ->and($this->repository->nextSortOrder(424242)->value())->toBe(10);
+});
+
+it('finds a category in the trash and deletes it forever', function (): void {
+    $id = CategoryModel::factory()->create(['name' => 'Soups'])->id;
+
+    expect($this->repository->findTrashed($id))->toBeNull();
+
+    $this->repository->delete($id);
+
+    expect($this->repository->findTrashed($id)?->name())->toBe('Soups');
+
+    $this->repository->forceDelete($id);
+
+    $this->assertDatabaseMissing('categories', ['id' => $id]);
+});
+
+it('knows when products or sub-categories still point to a category, also from the trash', function (): void {
+    $soups = CategoryModel::factory()->create();
+    $drinks = CategoryModel::factory()->create();
+    $empty = CategoryModel::factory()->create();
+    ProductModel::factory()->for($soups)->create()->delete();
+    CategoryModel::factory()->childOf($drinks)->create()->delete();
+
+    expect($this->repository->isUsedIncludingTrash($soups->id))->toBeTrue()
+        ->and($this->repository->isUsedIncludingTrash($drinks->id))->toBeTrue()
+        ->and($this->repository->isUsedIncludingTrash($empty->id))->toBeFalse();
+});

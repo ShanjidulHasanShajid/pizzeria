@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Infrastructure\Queries;
 
+use App\Modules\Catalog\Application\DTOs\AdminCategoryDetail;
+use App\Modules\Catalog\Application\DTOs\AdminCategoryFilter;
 use App\Modules\Catalog\Application\DTOs\AdminCategoryRow;
 use App\Modules\Catalog\Application\DTOs\AdminProductFilter;
 use App\Modules\Catalog\Application\DTOs\AdminProductPage;
@@ -24,16 +26,47 @@ use Illuminate\Database\Eloquent\Builder;
 
 final class EloquentAdminCatalogQuery implements AdminCatalogQuery
 {
-    public function categoryTable(): array
+    public function categoryTable(AdminCategoryFilter $filter = new AdminCategoryFilter): array
     {
-        $categories = CategoryModel::query()
+        $query = CategoryModel::query()
             ->withCount('products')
             ->orderBy('sort')
-            ->orderBy('id')
-            ->get();
+            ->orderBy('id');
+
+        if ($filter->status === 'trashed') {
+            $query->onlyTrashed();
+        } elseif ($filter->status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($filter->status === 'inactive') {
+            $query->where('is_active', false);
+        }
+
+        if ($filter->search !== '') {
+            $like = '%'.addcslashes($filter->search, '%_\\').'%';
+            $query->where(function (Builder $inner) use ($like): void {
+                $inner->where('name', 'like', $like)->orWhere('slug', 'like', $like);
+            });
+        }
+
+        $categories = $query->get();
 
         // One extra query for all station names (deleted stations included), instead of one per row.
         $stationNames = KitchenStationModel::withTrashed()->pluck('name', 'id')->all();
+
+        if (! $filter->isTree()) {
+            // A flat list: name every parent (also parents in the Trash) with one more query.
+            $parentNames = CategoryModel::withTrashed()
+                ->whereIn('id', $categories->pluck('parent_id')->filter()->unique()->all())
+                ->pluck('name', 'id')
+                ->all();
+
+            return array_values($categories->map(fn (CategoryModel $category): AdminCategoryRow => $this->toCategoryRow(
+                $category,
+                $category->parent_id === null ? null : (string) ($parentNames[$category->parent_id] ?? ''),
+                $stationNames,
+            ))->all());
+        }
+
         $byId = $categories->keyBy('id');
         $rows = [];
 
@@ -53,6 +86,41 @@ final class EloquentAdminCatalogQuery implements AdminCatalogQuery
         }
 
         return $rows;
+    }
+
+    public function category(int $id): ?AdminCategoryDetail
+    {
+        $category = CategoryModel::query()->withCount(['children', 'products'])->find($id);
+
+        if ($category === null) {
+            return null;
+        }
+
+        return new AdminCategoryDetail(
+            id: $category->id,
+            name: $category->name,
+            slug: $category->slug,
+            parentId: $category->parent_id,
+            kitchenStationId: $category->kitchen_station_id,
+            description: $category->description,
+            imagePath: $category->image_thumbnail_path ?? $category->image_path,
+            isActive: $category->is_active,
+            isFeatured: $category->is_featured,
+            showInMegaMenu: $category->show_in_mega_menu,
+            childCount: (int) $category->children_count,
+            productCount: (int) $category->products_count,
+        );
+    }
+
+    public function topLevelCategoryOptions(): array
+    {
+        $options = [];
+
+        foreach (CategoryModel::query()->whereNull('parent_id')->orderBy('sort')->orderBy('id')->get(['id', 'name']) as $category) {
+            $options[$category->id] = $category->name;
+        }
+
+        return $options;
     }
 
     public function productTable(AdminProductFilter $filter): AdminProductPage
@@ -196,6 +264,8 @@ final class EloquentAdminCatalogQuery implements AdminCatalogQuery
             isActive: $category->is_active,
             isFeatured: $category->is_featured,
             showInMegaMenu: $category->show_in_mega_menu,
+            imagePath: $category->image_thumbnail_path ?? $category->image_path,
+            isDeleted: $category->trashed(),
         );
     }
 

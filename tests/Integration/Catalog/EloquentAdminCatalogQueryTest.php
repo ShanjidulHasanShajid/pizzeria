@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Catalog\Application\DTOs\AdminCategoryFilter;
 use App\Modules\Catalog\Application\DTOs\AdminCategoryRow;
 use App\Modules\Catalog\Application\DTOs\AdminProductFilter;
 use App\Modules\Catalog\Application\DTOs\AdminProductRow;
@@ -181,4 +182,41 @@ it('lists tags in sort order with the number of products that have them', functi
         ->and($rows[1]->type)->toBe(TagType::Flavour)
         ->and($rows[1]->icon)->toBe('fire')
         ->and($this->query->tag(424242))->toBeNull();
+});
+
+it('filters the category list by search and status, and lists the trash', function (): void {
+    $drinks = CategoryModel::factory()->create(['name' => 'Drinks', 'slug' => 'drinks']);
+    CategoryModel::factory()->childOf($drinks)->create(['name' => 'Milkshakes', 'slug' => 'milkshakes']);
+    CategoryModel::factory()->inactive()->create(['name' => 'Soups', 'slug' => 'soups']);
+    CategoryModel::factory()->create(['name' => 'Old Pies', 'slug' => 'old-pies'])->delete();
+
+    $names = fn (AdminCategoryFilter $filter): array => array_map(
+        fn (AdminCategoryRow $row): string => $row->name,
+        $this->query->categoryTable($filter),
+    );
+
+    expect($names(new AdminCategoryFilter(search: 'shake')))->toBe(['Milkshakes'])
+        ->and($this->query->categoryTable(new AdminCategoryFilter(search: 'shake'))[0]->parentName)->toBe('Drinks')
+        ->and($names(new AdminCategoryFilter(status: 'active')))->toEqualCanonicalizing(['Drinks', 'Milkshakes'])
+        ->and($names(new AdminCategoryFilter(status: 'inactive')))->toBe(['Soups'])
+        ->and($names(new AdminCategoryFilter(status: 'trashed')))->toBe(['Old Pies'])
+        ->and($this->query->categoryTable(new AdminCategoryFilter(status: 'trashed'))[0]->isDeleted)->toBeTrue();
+});
+
+it('gives the details for the category form and the parent choices', function (): void {
+    $drinks = CategoryModel::factory()->create([
+        'name' => 'Drinks', 'sort' => 20, 'image_path' => 'categories/a.webp', 'image_thumbnail_path' => 'categories/thumbs/a.webp',
+    ]);
+    $pizza = CategoryModel::factory()->create(['name' => 'Pizza', 'sort' => 10]);
+    $shakes = CategoryModel::factory()->childOf($drinks)->create(['name' => 'Milkshakes']);
+    CategoryModel::factory()->create(['name' => 'Gone'])->delete();
+
+    $detail = $this->query->category($drinks->id);
+
+    expect($detail?->childCount)->toBe(1)
+        ->and($detail?->imagePath)->toBe('categories/thumbs/a.webp')
+        ->and($detail?->kitchenStationId)->toBe($drinks->kitchen_station_id)
+        ->and($this->query->category($shakes->id)?->parentId)->toBe($drinks->id)
+        ->and($this->query->category(424242))->toBeNull()
+        ->and($this->query->topLevelCategoryOptions())->toBe([$pizza->id => 'Pizza', $drinks->id => 'Drinks']);
 });
