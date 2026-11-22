@@ -18,6 +18,7 @@ use App\Modules\Catalog\Application\UseCases\Categories\ToggleCategoryFeatured;
 use App\Modules\Catalog\Application\UseCases\Categories\UpdateCategory;
 use App\Modules\Catalog\Domain\Entities\KitchenStation;
 use App\Modules\Catalog\Domain\Exceptions\CatalogItemInUse;
+use App\Modules\Catalog\Domain\Exceptions\RestoreBlocked;
 use App\Modules\Shared\Domain\Exceptions\EntityNotFound;
 use App\Modules\Shared\Domain\Exceptions\ValidationFailed;
 use App\Modules\Shared\Domain\Services\SlugGenerator;
@@ -252,7 +253,7 @@ describe('deleting', function (): void {
         expect($this->categories->isDeleted($id))->toBeTrue()
             ->and($this->files->paths())->toHaveCount(2);
 
-        (new RestoreCategory($this->categories))->handle(new CatalogItemInput($id));
+        (new RestoreCategory($this->categories, $this->stations, $this->transactions))->handle(new CatalogItemInput($id));
         expect($this->categories->find($id)->image())->not->toBeNull();
     });
 
@@ -276,6 +277,31 @@ describe('deleting', function (): void {
         expect(fn () => $forceDelete->handle(new CatalogItemInput($live)))->toThrow(EntityNotFound::class);
         expect(fn () => $forceDelete->handle(new CatalogItemInput($trashed)))->toThrow(CatalogItemInUse::class, 'deleted forever');
         expect($this->categories->exists($trashed))->toBeTrue();
+    });
+
+    it('does not restore a sub-category while its parent is in the trash', function (): void {
+        $drinks = ($this->create)(['name' => 'Drinks']);
+        $coffee = ($this->create)(['name' => 'Coffee', 'parentId' => $drinks]);
+        $this->categories->delete($coffee);
+        $this->categories->delete($drinks);
+        $restore = new RestoreCategory($this->categories, $this->stations, $this->transactions);
+
+        expect(fn () => $restore->handle(new CatalogItemInput($coffee)))->toThrow(RestoreBlocked::class, 'Restore "Drinks" first');
+        expect($this->categories->isDeleted($coffee))->toBeTrue();
+
+        $restore->handle(new CatalogItemInput($drinks));
+        $restore->handle(new CatalogItemInput($coffee));
+        expect($this->categories->isDeleted($coffee))->toBeFalse();
+    });
+
+    it('does not restore a category while its kitchen station is in the trash', function (): void {
+        $id = ($this->create)(['name' => 'Juices']);
+        $this->categories->delete($id);
+        $this->stations->delete(1);
+        $restore = new RestoreCategory($this->categories, $this->stations, $this->transactions);
+
+        expect(fn () => $restore->handle(new CatalogItemInput($id)))->toThrow(RestoreBlocked::class, 'Restore "Drinks Bar" first');
+        expect($this->categories->isDeleted($id))->toBeTrue();
     });
 });
 

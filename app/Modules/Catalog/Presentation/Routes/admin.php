@@ -7,6 +7,7 @@ use App\Modules\Catalog\Presentation\Http\Controllers\Admin\KitchenStationContro
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\ProductController;
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\SizeTierController;
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\TagController;
+use App\Modules\Catalog\Presentation\Http\Controllers\Admin\TrashController;
 use Illuminate\Support\Facades\Route;
 
 // Loaded with prefix "/admin", names "admin." and middleware web + auth + staff
@@ -26,6 +27,7 @@ Route::middleware('can:manage-catalog')->group(function (): void {
             Route::put('/{station}', 'update')->name('update');
             Route::delete('/{station}', 'destroy')->name('destroy');
             Route::post('/{station}/restore', 'restore')->name('restore');
+            Route::delete('/{station}/force', 'forceDestroy')->middleware('can:force-delete')->name('force-destroy');
         });
 
     Route::prefix('size-tiers')
@@ -42,6 +44,7 @@ Route::middleware('can:manage-catalog')->group(function (): void {
             Route::patch('/{sizeTier}/toggle', 'toggle')->name('toggle');
             Route::delete('/{sizeTier}', 'destroy')->name('destroy');
             Route::post('/{sizeTier}/restore', 'restore')->name('restore');
+            Route::delete('/{sizeTier}/force', 'forceDestroy')->middleware('can:force-delete')->name('force-destroy');
         });
 
     Route::prefix('tags')
@@ -57,6 +60,7 @@ Route::middleware('can:manage-catalog')->group(function (): void {
             Route::put('/{tag}', 'update')->name('update');
             Route::delete('/{tag}', 'destroy')->name('destroy');
             Route::post('/{tag}/restore', 'restore')->name('restore');
+            Route::delete('/{tag}/force', 'forceDestroy')->middleware('can:force-delete')->name('force-destroy');
         });
 
     Route::prefix('categories')
@@ -95,4 +99,6 @@ Route::middleware('can:manage-catalog')->group(function (): void {
             Route::post('/{product}/restore', 'restore')->name('restore');
             Route::delete('/{product}/force', 'forceDestroy')->middleware('can:force-delete')->name('force-destroy');
         });
+
+    Route::get('/trash', [TrashController::class, 'index'])->name('trash.index');
 });

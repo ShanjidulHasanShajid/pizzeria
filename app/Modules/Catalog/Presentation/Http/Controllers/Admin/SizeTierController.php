@@ -11,6 +11,7 @@ use App\Modules\Catalog\Application\DTOs\UpdateSizeTierInput;
 use App\Modules\Catalog\Application\Queries\AdminCatalogQuery;
 use App\Modules\Catalog\Application\UseCases\SizeTiers\CreateSizeTier;
 use App\Modules\Catalog\Application\UseCases\SizeTiers\DeleteSizeTier;
+use App\Modules\Catalog\Application\UseCases\SizeTiers\ForceDeleteSizeTier;
 use App\Modules\Catalog\Application\UseCases\SizeTiers\ReorderSizeTiers;
 use App\Modules\Catalog\Application\UseCases\SizeTiers\RestoreSizeTier;
 use App\Modules\Catalog\Application\UseCases\SizeTiers\ToggleSizeTierActive;
@@ -93,6 +94,14 @@ final class SizeTierController
         return $this->runListAction(
             fn () => $restoreSizeTier->handle(new CatalogItemInput($sizeTier)),
             'Size restored.',
+        );
+    }
+
+    public function forceDestroy(int $sizeTier, ForceDeleteSizeTier $forceDelete): RedirectResponse
+    {
+        return $this->runListAction(
+            fn () => $forceDelete->handle(new CatalogItemInput($sizeTier)),
+            'Size deleted forever.',
         );
     }
 

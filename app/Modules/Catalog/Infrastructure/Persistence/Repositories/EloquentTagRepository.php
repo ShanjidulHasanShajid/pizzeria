@@ -47,6 +47,19 @@ final class EloquentTagRepository implements TagRepository
         TagModel::onlyTrashed()->findOrFail($id)->restore();
     }
 
+    public function findTrashed(int $id): ?Tag
+    {
+        $model = TagModel::onlyTrashed()->find($id);
+
+        return $model === null ? null : $this->toEntity($model);
+    }
+
+    public function forceDelete(int $id): void
+    {
+        // product_tag has cascadeOnDelete: MariaDB removes the tag's product links itself.
+        TagModel::onlyTrashed()->findOrFail($id)->forceDelete();
+    }
+
     public function slugExists(Slug $slug, ?int $ignoreId = null): bool
     {
         $query = TagModel::withTrashed()->where('slug', $slug->value());

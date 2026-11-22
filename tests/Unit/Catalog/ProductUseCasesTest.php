@@ -32,6 +32,7 @@ use App\Modules\Catalog\Domain\Entities\Variant;
 use App\Modules\Catalog\Domain\Enums\LeadTimeClass;
 use App\Modules\Catalog\Domain\Enums\ProductType;
 use App\Modules\Catalog\Domain\Enums\TagType;
+use App\Modules\Catalog\Domain\Exceptions\RestoreBlocked;
 use App\Modules\Shared\Domain\Exceptions\EntityNotFound;
 use App\Modules\Shared\Domain\Exceptions\ValidationFailed;
 use App\Modules\Shared\Domain\Services\SlugGenerator;
@@ -89,7 +90,7 @@ function savedVariantLabels(InMemoryProductRepository $products, int $id): array
 
 beforeEach(function (): void {
     $this->products = new InMemoryProductRepository;
-    $categories = new InMemoryCategoryRepository;
+    $this->categories = $categories = new InMemoryCategoryRepository;
     $categories->save(Category::create('Pizza', Slug::fromString('pizza'), 1, SortOrder::first()));        // id 1
     $categories->save(Category::create('Sides', Slug::fromString('sides'), 1, SortOrder::fromInt(20)));    // id 2
     $sizeTiers = new InMemorySizeTierRepository;
@@ -243,8 +244,18 @@ describe('switches, trash and duplicate', function (): void {
         (new DeleteProduct($this->products))->handle(new CatalogItemInput($id));
         expect($this->products->find($id))->toBeNull();
 
-        (new RestoreProduct($this->products))->handle(new CatalogItemInput($id));
+        (new RestoreProduct($this->products, $this->categories, $this->transactions))->handle(new CatalogItemInput($id));
         expect($this->products->find($id))->not->toBeNull();
+    });
+
+    it('does not restore a product while its category is in the trash', function (): void {
+        $id = ($this->create)();
+        $this->products->delete($id);
+        $this->categories->delete(1);
+        $restore = new RestoreProduct($this->products, $this->categories, $this->transactions);
+
+        expect(fn () => $restore->handle(new CatalogItemInput($id)))->toThrow(RestoreBlocked::class, 'Restore "Pizza" first');
+        expect($this->products->find($id))->toBeNull();
     });
 
     it('deletes a product forever only from the trash, with all its image files', function (): void {

@@ -25,6 +25,9 @@ final class InMemoryKitchenStationRepository implements KitchenStationRepository
     /** @var array<int, true> */
     private array $usedByCategories = [];
 
+    /** @var array<int, true> */
+    private array $usedByTrashedCategories = [];
+
     private int $nextId = 1;
 
     public function find(int $id): ?KitchenStation
@@ -62,6 +65,25 @@ final class InMemoryKitchenStationRepository implements KitchenStationRepository
         unset($this->deleted[$id]);
     }
 
+    public function findTrashed(int $id): ?KitchenStation
+    {
+        return isset($this->deleted[$id]) ? clone $this->stations[$id] : null;
+    }
+
+    public function isUsedIncludingTrash(int $id): bool
+    {
+        return isset($this->usedByCategories[$id]) || isset($this->usedByTrashedCategories[$id]);
+    }
+
+    public function forceDelete(int $id): void
+    {
+        if (! isset($this->deleted[$id])) {
+            throw EntityNotFound::withId('Kitchen station', $id);
+        }
+
+        unset($this->stations[$id], $this->deleted[$id]);
+    }
+
     public function isUsedByCategories(int $id): bool
     {
         return isset($this->usedByCategories[$id]);
@@ -90,5 +112,15 @@ final class InMemoryKitchenStationRepository implements KitchenStationRepository
     public function isDeleted(int $id): bool
     {
         return isset($this->deleted[$id]);
+    }
+
+    public function markUsedByTrashedCategories(int $id): void
+    {
+        $this->usedByTrashedCategories[$id] = true;
+    }
+
+    public function exists(int $id): bool
+    {
+        return isset($this->stations[$id]);
     }
 }

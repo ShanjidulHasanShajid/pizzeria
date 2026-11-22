@@ -58,6 +58,20 @@ final class InMemoryTagRepository implements TagRepository
         unset($this->deleted[$id]);
     }
 
+    public function findTrashed(int $id): ?Tag
+    {
+        return isset($this->deleted[$id]) ? clone $this->tags[$id] : null;
+    }
+
+    public function forceDelete(int $id): void
+    {
+        if (! isset($this->deleted[$id])) {
+            throw EntityNotFound::withId('Tag', $id);
+        }
+
+        unset($this->tags[$id], $this->deleted[$id]);
+    }
+
     /** Looks at deleted ones too, like the real repository. */
     public function slugExists(Slug $slug, ?int $ignoreId = null): bool
     {
@@ -83,10 +97,15 @@ final class InMemoryTagRepository implements TagRepository
         return $highest === null ? SortOrder::first() : $highest->next();
     }
 
-    // Test helper (not part of the interface)
+    // Test helpers (not part of the interface)
 
     public function isDeleted(int $id): bool
     {
         return isset($this->deleted[$id]);
+    }
+
+    public function exists(int $id): bool
+    {
+        return isset($this->tags[$id]);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Catalog\Domain\Entities\Tag;
 use App\Modules\Catalog\Domain\Enums\TagType;
 use App\Modules\Catalog\Domain\Repositories\TagRepository;
+use App\Modules\Catalog\Infrastructure\Persistence\Models\Product as ProductModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Tag as TagModel;
 use App\Modules\Shared\Domain\ValueObjects\Slug;
 use App\Modules\Shared\Domain\ValueObjects\SortOrder;
@@ -77,4 +78,17 @@ it('gives the position after the last tag that is not deleted', function (): voi
     TagModel::factory()->create(['sort' => 70])->delete();
 
     expect($this->repository->nextSortOrder()->value())->toBe(30);
+});
+
+it('deletes a tag in the Trash for good, together with its product links', function (): void {
+    $tag = TagModel::factory()->create(['name' => 'Mild']);
+    ProductModel::factory()->create()->tags()->attach($tag);
+    $tag->delete();
+
+    expect($this->repository->findTrashed($tag->id)?->name())->toBe('Mild');
+
+    $this->repository->forceDelete($tag->id);
+
+    $this->assertDatabaseMissing('tags', ['id' => $tag->id]);
+    $this->assertDatabaseMissing('product_tag', ['tag_id' => $tag->id]);
 });

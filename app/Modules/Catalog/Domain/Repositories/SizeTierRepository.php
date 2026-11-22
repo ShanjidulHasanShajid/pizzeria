@@ -30,6 +30,18 @@ interface SizeTierRepository
     /** True when a variant that is not deleted uses this size. Phase 8 adds option prices to this check. */
     public function isInUse(int $id): bool;
 
+    /** A size tier that is in the Trash, or null. */
+    public function findTrashed(int $id): ?SizeTier;
+
+    /**
+     * True when any variant uses this size: also removed variants (kept for old orders)
+     * and variants of products in the Trash. The database refuses to delete such a row for good.
+     */
+    public function isUsedIncludingTrash(int $id): bool;
+
+    /** Deletes a size tier that is in the Trash for good. */
+    public function forceDelete(int $id): void;
+
     /** The position after the last item that is not deleted: 10 for the first one, then +10. */
     public function nextSortOrder(): SortOrder;
 }

@@ -11,6 +11,7 @@ use App\Modules\Catalog\Application\DTOs\UpdateTagInput;
 use App\Modules\Catalog\Application\Queries\AdminCatalogQuery;
 use App\Modules\Catalog\Application\UseCases\Tags\CreateTag;
 use App\Modules\Catalog\Application\UseCases\Tags\DeleteTag;
+use App\Modules\Catalog\Application\UseCases\Tags\ForceDeleteTag;
 use App\Modules\Catalog\Application\UseCases\Tags\ReorderTags;
 use App\Modules\Catalog\Application\UseCases\Tags\RestoreTag;
 use App\Modules\Catalog\Application\UseCases\Tags\UpdateTag;
@@ -90,6 +91,14 @@ final class TagController
         return $this->runListAction(
             fn () => $restoreTag->handle(new CatalogItemInput($tag)),
             'Tag restored.',
+        );
+    }
+
+    public function forceDestroy(int $tag, ForceDeleteTag $forceDelete): RedirectResponse
+    {
+        return $this->runListAction(
+            fn () => $forceDelete->handle(new CatalogItemInput($tag)),
+            'Tag deleted forever and removed from its products.',
         );
     }
 

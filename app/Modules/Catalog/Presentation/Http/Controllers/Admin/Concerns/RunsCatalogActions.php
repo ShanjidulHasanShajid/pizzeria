@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Presentation\Http\Controllers\Admin\Concerns;
 
 use App\Modules\Catalog\Domain\Exceptions\CatalogItemInUse;
+use App\Modules\Catalog\Domain\Exceptions\RestoreBlocked;
 use App\Modules\Shared\Domain\Exceptions\EntityNotFound;
 use App\Modules\Shared\Domain\Exceptions\ValidationFailed;
 use App\Modules\Shared\Presentation\Support\ValidationFailedTranslator;
@@ -14,7 +15,7 @@ use Illuminate\Http\RedirectResponse;
 /**
  * The same three answers for every catalog admin action, written once:
  * - a broken form rule (ValidationFailed) goes back to the form with the error under the field,
- * - "still in use" goes back with a red message at the top,
+ * - "still in use" or "restore the parent first" goes back with a red message at the top,
  * - an unknown id is a 404 page.
  */
 trait RunsCatalogActions
@@ -45,8 +46,8 @@ trait RunsCatalogActions
     {
         try {
             $action();
-        } catch (CatalogItemInUse $inUse) {
-            return back()->with('error', $inUse->getMessage());
+        } catch (CatalogItemInUse|RestoreBlocked $refused) {
+            return back()->with('error', $refused->getMessage());
         } catch (EntityNotFound) {
             abort(404);
         }

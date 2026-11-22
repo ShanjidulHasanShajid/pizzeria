@@ -11,6 +11,7 @@ use App\Modules\Catalog\Application\DTOs\UpdateKitchenStationInput;
 use App\Modules\Catalog\Application\Queries\AdminCatalogQuery;
 use App\Modules\Catalog\Application\UseCases\KitchenStations\CreateKitchenStation;
 use App\Modules\Catalog\Application\UseCases\KitchenStations\DeleteKitchenStation;
+use App\Modules\Catalog\Application\UseCases\KitchenStations\ForceDeleteKitchenStation;
 use App\Modules\Catalog\Application\UseCases\KitchenStations\ReorderKitchenStations;
 use App\Modules\Catalog\Application\UseCases\KitchenStations\RestoreKitchenStation;
 use App\Modules\Catalog\Application\UseCases\KitchenStations\UpdateKitchenStation;
@@ -81,6 +82,14 @@ final class KitchenStationController
         return $this->runListAction(
             fn () => $restoreStation->handle(new CatalogItemInput($station)),
             'Kitchen station restored.',
+        );
+    }
+
+    public function forceDestroy(int $station, ForceDeleteKitchenStation $forceDelete): RedirectResponse
+    {
+        return $this->runListAction(
+            fn () => $forceDelete->handle(new CatalogItemInput($station)),
+            'Kitchen station deleted forever.',
         );
     }
 
