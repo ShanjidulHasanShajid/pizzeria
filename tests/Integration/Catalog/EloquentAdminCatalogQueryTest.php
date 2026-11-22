@@ -5,9 +5,13 @@ declare(strict_types=1);
 use App\Modules\Catalog\Application\DTOs\AdminCategoryRow;
 use App\Modules\Catalog\Application\DTOs\AdminProductFilter;
 use App\Modules\Catalog\Application\DTOs\AdminProductRow;
+use App\Modules\Catalog\Application\DTOs\KitchenStationRow;
+use App\Modules\Catalog\Application\DTOs\SizeTierRow;
+use App\Modules\Catalog\Application\DTOs\TagRow;
 use App\Modules\Catalog\Application\DTOs\TrashedCatalogItem;
 use App\Modules\Catalog\Application\Queries\AdminCatalogQuery;
 use App\Modules\Catalog\Domain\Enums\ProductType;
+use App\Modules\Catalog\Domain\Enums\TagType;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Category as CategoryModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\KitchenStation as KitchenStationModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Product as ProductModel;
@@ -131,4 +135,50 @@ it('lists everything in the Trash, newest deletion first', function (): void {
         'tag: Mild',
         'kitchen_station: Old Grill',
     ]);
+});
+
+it('lists kitchen stations in sort order with the number of categories that use them', function (): void {
+    $wok = KitchenStationModel::factory()->create(['name' => 'Wok', 'sort' => 20]);
+    $tandoor = KitchenStationModel::factory()->create(['name' => 'Tandoor', 'sort' => 10]);
+    CategoryModel::factory()->count(2)->for($wok)->create();
+    CategoryModel::factory()->for($wok)->create()->delete();
+    KitchenStationModel::factory()->create(['name' => 'Old Grill'])->delete();
+
+    $rows = $this->query->kitchenStationTable();
+
+    expect(array_map(fn (KitchenStationRow $row): string => $row->name, $rows))->toBe(['Tandoor', 'Wok'])
+        ->and($rows[1]->categoryCount)->toBe(2)
+        ->and($this->query->kitchenStation($tandoor->id)?->categoryCount)->toBe(0)
+        ->and($this->query->kitchenStation(424242))->toBeNull();
+});
+
+it('lists size tiers in sort order with the number of variants that use them', function (): void {
+    $medium = SizeTierModel::factory()->create(['name' => 'Medium', 'sort' => 20]);
+    SizeTierModel::factory()->create(['name' => 'Personal', 'sort' => 10]);
+    ProductVariantModel::factory()->forSizeTier($medium)->create();
+    ProductVariantModel::factory()->forSizeTier($medium)->create(['label' => 'Medium Thin'])->delete();
+
+    $rows = $this->query->sizeTierTable();
+
+    expect(array_map(fn (SizeTierRow $row): string => $row->name, $rows))->toBe(['Personal', 'Medium'])
+        ->and($rows[1]->variantCount)->toBe(1)
+        ->and($this->query->sizeTier($medium->id)?->slug)->toBe($medium->slug)
+        ->and($this->query->sizeTier(424242))->toBeNull();
+});
+
+it('lists tags in sort order with the number of products that have them', function (): void {
+    $spicy = TagModel::factory()->create(['name' => 'Spicy', 'type' => TagType::Flavour, 'icon' => 'fire', 'sort' => 20]);
+    TagModel::factory()->create(['name' => 'Veg', 'sort' => 10]);
+    ProductModel::factory()->create()->tags()->attach($spicy);
+    $deleted = ProductModel::factory()->create();
+    $deleted->tags()->attach($spicy);
+    $deleted->delete();
+
+    $rows = $this->query->tagTable();
+
+    expect(array_map(fn (TagRow $row): string => $row->name, $rows))->toBe(['Veg', 'Spicy'])
+        ->and($rows[1]->productCount)->toBe(1)
+        ->and($rows[1]->type)->toBe(TagType::Flavour)
+        ->and($rows[1]->icon)->toBe('fire')
+        ->and($this->query->tag(424242))->toBeNull();
 });

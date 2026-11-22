@@ -8,6 +8,9 @@ use App\Modules\Catalog\Application\DTOs\AdminCategoryRow;
 use App\Modules\Catalog\Application\DTOs\AdminProductFilter;
 use App\Modules\Catalog\Application\DTOs\AdminProductPage;
 use App\Modules\Catalog\Application\DTOs\AdminProductRow;
+use App\Modules\Catalog\Application\DTOs\KitchenStationRow;
+use App\Modules\Catalog\Application\DTOs\SizeTierRow;
+use App\Modules\Catalog\Application\DTOs\TagRow;
 use App\Modules\Catalog\Application\DTOs\TrashedCatalogItem;
 use App\Modules\Catalog\Application\Queries\AdminCatalogQuery;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Category as CategoryModel;
@@ -134,6 +137,48 @@ final class EloquentAdminCatalogQuery implements AdminCatalogQuery
         return $items;
     }
 
+    public function kitchenStationTable(): array
+    {
+        $stations = KitchenStationModel::query()->withCount('categories')->orderBy('sort')->orderBy('id')->get();
+
+        return array_values($stations->map(fn (KitchenStationModel $station): KitchenStationRow => $this->toStationRow($station))->all());
+    }
+
+    public function kitchenStation(int $id): ?KitchenStationRow
+    {
+        $station = KitchenStationModel::query()->withCount('categories')->find($id);
+
+        return $station === null ? null : $this->toStationRow($station);
+    }
+
+    public function sizeTierTable(): array
+    {
+        $sizeTiers = SizeTierModel::query()->withCount('variants')->orderBy('sort')->orderBy('id')->get();
+
+        return array_values($sizeTiers->map(fn (SizeTierModel $sizeTier): SizeTierRow => $this->toSizeTierRow($sizeTier))->all());
+    }
+
+    public function sizeTier(int $id): ?SizeTierRow
+    {
+        $sizeTier = SizeTierModel::query()->withCount('variants')->find($id);
+
+        return $sizeTier === null ? null : $this->toSizeTierRow($sizeTier);
+    }
+
+    public function tagTable(): array
+    {
+        $tags = TagModel::query()->withCount('products')->orderBy('sort')->orderBy('id')->get();
+
+        return array_values($tags->map(fn (TagModel $tag): TagRow => $this->toTagRow($tag))->all());
+    }
+
+    public function tag(int $id): ?TagRow
+    {
+        $tag = TagModel::query()->withCount('products')->find($id);
+
+        return $tag === null ? null : $this->toTagRow($tag);
+    }
+
     /**
      * @param  array<int|string, mixed>  $stationNames  station id => name
      */
@@ -173,5 +218,51 @@ final class EloquentAdminCatalogQuery implements AdminCatalogQuery
         }
 
         return $items;
+    }
+
+    /**
+     * withCount() adds a "<relation>_count" column. Deleted categories are not counted.
+     */
+    private function toStationRow(KitchenStationModel $station): KitchenStationRow
+    {
+        return new KitchenStationRow(
+            id: $station->id,
+            name: $station->name,
+            sort: $station->sort,
+            isActive: $station->is_active,
+            categoryCount: (int) $station->categories_count,
+        );
+    }
+
+    /**
+     * Deleted variants are not counted.
+     */
+    private function toSizeTierRow(SizeTierModel $sizeTier): SizeTierRow
+    {
+        return new SizeTierRow(
+            id: $sizeTier->id,
+            name: $sizeTier->name,
+            slug: $sizeTier->slug,
+            sort: $sizeTier->sort,
+            isActive: $sizeTier->is_active,
+            variantCount: (int) $sizeTier->variants_count,
+        );
+    }
+
+    /**
+     * Products in the Trash are not counted.
+     */
+    private function toTagRow(TagModel $tag): TagRow
+    {
+        return new TagRow(
+            id: $tag->id,
+            name: $tag->name,
+            slug: $tag->slug,
+            type: $tag->type,
+            icon: $tag->icon,
+            sort: $tag->sort,
+            isActive: $tag->is_active,
+            productCount: (int) $tag->products_count,
+        );
     }
 }

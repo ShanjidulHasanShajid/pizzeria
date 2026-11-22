@@ -68,3 +68,12 @@ it('returns null for an unknown id and refuses to delete it', function (): void 
     expect($this->repository->find(424242))->toBeNull();
     expect(fn () => $this->repository->delete(424242))->toThrow(ModelNotFoundException::class);
 });
+
+it('gives the position after the last station that is not deleted', function (): void {
+    expect($this->repository->nextSortOrder()->value())->toBe(10);
+
+    KitchenStationModel::factory()->create(['sort' => 20]);
+    KitchenStationModel::factory()->create(['sort' => 70])->delete();
+
+    expect($this->repository->nextSortOrder()->value())->toBe(30);
+});

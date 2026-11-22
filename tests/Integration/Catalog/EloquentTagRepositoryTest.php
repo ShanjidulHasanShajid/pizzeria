@@ -69,3 +69,12 @@ it('finds a taken slug, also in the Trash, but not the slug of the tag being edi
 
     expect($this->repository->slugExists(Slug::fromString('veg')))->toBeTrue();
 });
+
+it('gives the position after the last tag that is not deleted', function (): void {
+    expect($this->repository->nextSortOrder()->value())->toBe(10);
+
+    TagModel::factory()->create(['sort' => 20]);
+    TagModel::factory()->create(['sort' => 70])->delete();
+
+    expect($this->repository->nextSortOrder()->value())->toBe(30);
+});
