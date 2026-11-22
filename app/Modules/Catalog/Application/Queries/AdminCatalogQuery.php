@@ -7,6 +7,7 @@ namespace App\Modules\Catalog\Application\Queries;
 use App\Modules\Catalog\Application\DTOs\AdminCategoryDetail;
 use App\Modules\Catalog\Application\DTOs\AdminCategoryFilter;
 use App\Modules\Catalog\Application\DTOs\AdminCategoryRow;
+use App\Modules\Catalog\Application\DTOs\AdminProductDetail;
 use App\Modules\Catalog\Application\DTOs\AdminProductFilter;
 use App\Modules\Catalog\Application\DTOs\AdminProductPage;
 use App\Modules\Catalog\Application\DTOs\KitchenStationRow;
@@ -76,4 +77,7 @@ interface AdminCatalogQuery
      * @return array<int, string>
      */
     public function topLevelCategoryOptions(): array;
+
+    /** One product that is not deleted, with variants, images and tag ids, for the edit form; or null. */
+    public function product(int $id): ?AdminProductDetail;
 }

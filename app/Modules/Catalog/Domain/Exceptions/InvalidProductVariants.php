@@ -50,4 +50,9 @@ final class InvalidProductVariants extends DomainException
     {
         return new self("This product has no variant called \"{$label}\".");
     }
+
+    public static function unknownVariant(int $id): self
+    {
+        return new self("Variant {$id} does not belong to this product.");
+    }
 }
