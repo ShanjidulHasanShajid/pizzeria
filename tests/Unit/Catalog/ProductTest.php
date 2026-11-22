@@ -517,3 +517,115 @@ describe('images and tags', function (): void {
         expect(fn () => savedProduct()->assignTags([0]))->toThrow(InvalidValue::class);
     });
 });
+
+describe('more rules (6.49)', function (): void {
+    it('accepts a name of 150 characters and rejects 151', function (): void {
+        expect(newProduct(name: str_repeat('x', 150))->name())->toHaveLength(150);
+        expect(fn () => newProduct(name: str_repeat('x', 151)))->toThrow(InvalidValue::class, '1 to 150');
+    });
+
+    it('rejects a description longer than 5000 characters', function (): void {
+        expect(fn () => newProduct(description: str_repeat('x', 5001)))
+            ->toThrow(InvalidValue::class, 'up to 5000');
+    });
+
+    it('rejects an invalid tag id in stored data', function (): void {
+        expect(fn () => savedProduct(tagIds: [2, 0]))->toThrow(InvalidValue::class, 'valid tags');
+    });
+
+    it('creates a build-your-own pizza when its first variant has a size', function (): void {
+        $builder = newProduct(
+            ProductType::Builder,
+            firstVariant: Variant::create('Personal', Money::fromTaka('400'), SortOrder::first(), sizeTierId: 1),
+        );
+
+        expect($builder->defaultVariant()->sizeTierId())->toBe(1);
+    });
+
+    it('refuses to add a variant without a size to a build-your-own pizza', function (): void {
+        $builder = savedProduct(ProductType::Builder);
+
+        expect(fn () => $builder->addVariant(Variant::create('Family', Money::fromTaka('1500'), SortOrder::fromInt(40))))
+            ->toThrow(InvalidProductVariants::class, 'Choose a size');
+        expect(variantLabels($builder))->toBe(['Personal', 'Medium', 'Large']);
+    });
+
+    it('refuses to add a second variant for the same size to a build-your-own pizza', function (): void {
+        $builder = savedProduct(ProductType::Builder);
+
+        expect(fn () => $builder->addVariant(Variant::create('Medium Thin', Money::fromTaka('800'), SortOrder::fromInt(40), sizeTierId: 2)))
+            ->toThrow(InvalidProductVariants::class, 'only one variant per size');
+        expect($builder->variants())->toHaveCount(3);
+    });
+
+    it('refuses an update that gives a size to two variants of a build-your-own pizza', function (): void {
+        $builder = savedProduct(ProductType::Builder);
+
+        expect(fn () => $builder->updateVariant('Medium', 'Medium', Money::fromTaka('850'), 3))
+            ->toThrow(InvalidProductVariants::class, 'only one variant per size');
+        expect($builder->variant('Medium')->sizeTierId())->toBe(2);
+    });
+
+    it('lets a variant keep its own label when only its price changes', function (): void {
+        $product = savedProduct();
+
+        $product->updateVariant('Medium', 'medium', Money::fromTaka('900'), 2);
+
+        expect($product->variant('Medium')->price()->poisha())->toBe(90_000)
+            ->and($product->variants())->toHaveCount(3);
+    });
+
+    it('keeps the default when a variant that is not the default is removed', function (): void {
+        $product = savedProduct();
+
+        $product->removeVariant('Large');
+
+        expect(variantLabels($product))->toBe(['Personal', 'Medium'])
+            ->and($product->defaultVariant()->label())->toBe('Personal');
+    });
+
+    it('refuses every variant action on a label it does not have', function (): void {
+        $product = savedProduct();
+
+        expect(fn () => $product->setDefaultVariant('Family'))->toThrow(InvalidProductVariants::class, 'no variant called');
+        expect(fn () => $product->removeVariant('Family'))->toThrow(InvalidProductVariants::class, 'no variant called');
+        expect(fn () => $product->updateVariant('Family', 'Family', Money::fromTaka('1'), null))->toThrow(InvalidProductVariants::class, 'no variant called');
+        expect(fn () => $product->markVariantSoldOut('Family'))->toThrow(InvalidProductVariants::class, 'no variant called');
+
+        expect($product->defaultVariant()->label())->toBe('Personal');
+    });
+
+    it('keeps the product available when all its variants are sold out', function (): void {
+        $product = savedProduct();
+
+        foreach (['Personal', 'Medium', 'Large'] as $label) {
+            $product->markVariantSoldOut($label);
+        }
+
+        // Two separate switches: the shop pages combine them (6.51).
+        expect($product->isAvailable())->toBeTrue();
+    });
+
+    it('has no main image after its last image is removed, and the next image becomes main', function (): void {
+        $product = savedProduct();
+        $product->addImage(ImagePath::of('products/a.webp'));
+
+        $product->removeImage('products/a.webp');
+
+        expect($product->images())->toBe([])
+            ->and($product->mainImage())->toBeNull();
+
+        $product->addImage(ImagePath::of('products/b.webp'));
+
+        expect($product->mainImage()?->path()->original())->toBe('products/b.webp');
+    });
+
+    it('refuses to remove or promote an image it does not have', function (): void {
+        $product = savedProduct(images: [savedImage(1, 'products/a.webp', isMain: true)]);
+
+        expect(fn () => $product->removeImage('products/x.webp'))->toThrow(InvalidProductImages::class, 'no image');
+        expect(fn () => $product->setMainImage('products/x.webp'))->toThrow(InvalidProductImages::class, 'no image');
+
+        expect($product->mainImage()?->path()->original())->toBe('products/a.webp');
+    });
+});
