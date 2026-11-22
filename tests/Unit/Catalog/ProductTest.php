@@ -629,3 +629,56 @@ describe('more rules (6.49)', function (): void {
         expect($product->mainImage()?->path()->original())->toBe('products/a.webp');
     });
 });
+
+describe('replacing all variants at once (7.18)', function (): void {
+    it('edits, adds, removes and reorders variants in one go, keeping the ids of edited ones', function (): void {
+        $product = savedProduct(); // Personal (1, default), Medium (2), Large (3)
+
+        $product->replaceVariants([
+            Variant::reconstitute(3, 'Large', Money::fromTaka('1300'), 3, true, true, SortOrder::first()),
+            Variant::reconstitute(1, 'Personal', Money::fromTaka('450'), 1, false, false, SortOrder::first()),
+            Variant::create('Family', Money::fromTaka('1700'), SortOrder::first(), sizeTierId: 4),
+        ]);
+
+        expect(variantLabels($product))->toBe(['Large', 'Personal', 'Family'])
+            ->and($product->variant('Large')->id())->toBe(3)
+            ->and($product->variant('Large')->sort()->value())->toBe(10)
+            ->and($product->variant('Family')->sort()->value())->toBe(30)
+            ->and($product->defaultVariant()->label())->toBe('Large')
+            ->and($product->variant('Personal')->isAvailable())->toBeFalse();
+        expect(fn () => $product->variant('Medium'))->toThrow(InvalidProductVariants::class);
+    });
+
+    it('checks the rules on the final list only, so two variants can swap labels', function (): void {
+        $product = savedProduct();
+
+        $product->replaceVariants([
+            Variant::reconstitute(1, 'Medium', Money::fromTaka('450'), 1, true, true, SortOrder::first()),
+            Variant::reconstitute(2, 'Personal', Money::fromTaka('850'), 2, false, true, SortOrder::first()),
+        ]);
+
+        expect($product->variant('Medium')->id())->toBe(1)
+            ->and($product->variant('Personal')->id())->toBe(2);
+    });
+
+    it('refuses a variant of another product and leaves the product as it was', function (): void {
+        $product = savedProduct();
+
+        expect(fn () => $product->replaceVariants([
+            Variant::reconstitute(99, 'Personal', Money::fromTaka('450'), 1, true, true, SortOrder::first()),
+        ]))->toThrow(InvalidProductVariants::class, 'does not belong');
+
+        expect(variantLabels($product))->toBe(['Personal', 'Medium', 'Large']);
+    });
+
+    it('refuses a final list without exactly one default and leaves the product as it was', function (): void {
+        $product = savedProduct();
+
+        expect(fn () => $product->replaceVariants([
+            Variant::create('Regular', Money::fromTaka('300'), SortOrder::first()),
+        ]))->toThrow(InvalidProductVariants::class, 'Exactly one variant');
+
+        expect($product->defaultVariant()->label())->toBe('Personal')
+            ->and($product->variant('Medium')->sort()->value())->toBe(20);
+    });
+});

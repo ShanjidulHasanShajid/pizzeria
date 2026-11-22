@@ -34,4 +34,13 @@ interface ProductRepository
 
     /** Looks at deleted rows too. $ignoreId skips the product that is being edited. */
     public function slugExists(Slug $slug, ?int $ignoreId = null): bool;
+
+    /** A product that is in the Trash, with its variants, images and tag ids, or null. */
+    public function findTrashed(int $id): ?Product;
+
+    /**
+     * Deletes a product that is in the Trash for good. Its variant, image and tag rows go with it
+     * (the foreign keys cascade). The caller deletes the image files.
+     */
+    public function forceDelete(int $id): void;
 }

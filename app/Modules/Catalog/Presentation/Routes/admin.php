@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\CategoryController;
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\KitchenStationController;
+use App\Modules\Catalog\Presentation\Http\Controllers\Admin\ProductController;
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\SizeTierController;
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\TagController;
 use Illuminate\Support\Facades\Route;
@@ -75,5 +76,23 @@ Route::middleware('can:manage-catalog')->group(function (): void {
             Route::post('/{category}/restore', 'restore')->name('restore');
             // "Delete forever": super admins only (business rules section 2).
             Route::delete('/{category}/force', 'forceDestroy')->middleware('can:force-delete')->name('force-destroy');
+        });
+
+    Route::prefix('products')
+        ->name('products.')
+        ->where(['product' => '[0-9]+'])
+        ->controller(ProductController::class)
+        ->group(function (): void {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{product}/edit', 'edit')->name('edit');
+            Route::put('/{product}', 'update')->name('update');
+            Route::patch('/{product}/published', 'togglePublished')->name('toggle-published');
+            Route::patch('/{product}/availability', 'toggleAvailability')->name('toggle-availability');
+            Route::post('/{product}/duplicate', 'duplicate')->name('duplicate');
+            Route::delete('/{product}', 'destroy')->name('destroy');
+            Route::post('/{product}/restore', 'restore')->name('restore');
+            Route::delete('/{product}/force', 'forceDestroy')->middleware('can:force-delete')->name('force-destroy');
         });
 });

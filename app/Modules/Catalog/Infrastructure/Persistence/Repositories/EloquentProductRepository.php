@@ -34,6 +34,18 @@ final class EloquentProductRepository implements ProductRepository
         return array_values($models->map(fn (ProductModel $model): Product => $this->mapper->toEntity($model))->all());
     }
 
+    public function findTrashed(int $id): ?Product
+    {
+        $model = ProductModel::onlyTrashed()->with(['variants', 'images', 'tagsIncludingDeleted'])->find($id);
+
+        return $model === null ? null : $this->mapper->toEntity($model);
+    }
+
+    public function forceDelete(int $id): void
+    {
+        ProductModel::onlyTrashed()->findOrFail($id)->forceDelete();
+    }
+
     /**
      * The whole aggregate in one transaction: the product row, then its variants,
      * images and tag links. Either everything is saved, or nothing.

@@ -217,3 +217,24 @@ it('finds a taken slug, also in the Trash, but not the slug of the product being
 
     expect($this->repository->slugExists(Slug::fromString('margherita')))->toBeTrue();
 });
+
+it('finds a product in the trash and deletes it forever with its variants, images and tag links', function (): void {
+    $tagId = TagModel::factory()->create()->id;
+    $pizza = unsavedPizza($this->categoryId, $this->sizeTierIds);
+    $pizza->addImage(ImagePath::of('products/a.webp'));
+    $pizza->assignTags([$tagId]);
+    $id = $this->repository->save($pizza);
+
+    expect($this->repository->findTrashed($id))->toBeNull();
+
+    $this->repository->delete($id);
+
+    expect($this->repository->findTrashed($id)?->variants())->toHaveCount(3);
+
+    $this->repository->forceDelete($id);
+
+    $this->assertDatabaseMissing('products', ['id' => $id]);
+    $this->assertDatabaseMissing('product_variants', ['product_id' => $id]);
+    $this->assertDatabaseMissing('product_images', ['product_id' => $id]);
+    $this->assertDatabaseMissing('product_tag', ['product_id' => $id]);
+});

@@ -305,6 +305,46 @@ final class Product extends AggregateRoot
     }
 
     /**
+     * Replaces the whole variant list at once, in the given order (sort 10, 20, 30 ...).
+     * The admin form sends every row together, so the rules are checked on the FINAL
+     * list only: renaming "Large" to "Family" while adding a new "Large" works.
+     * A variant with an id must already belong to this product (it keeps its row);
+     * one without an id is new; a known variant that is missing from the list is removed.
+     * On a broken rule the product stays exactly as it was.
+     *
+     * @param  list<Variant>  $variants
+     */
+    public function replaceVariants(array $variants): void
+    {
+        $knownIds = [];
+
+        foreach ($this->variants as $variant) {
+            if ($variant->id() !== null) {
+                $knownIds[$variant->id()] = true;
+            }
+        }
+
+        foreach ($variants as $variant) {
+            $id = $variant->id();
+
+            if ($id !== null && ! isset($knownIds[$id])) {
+                throw InvalidProductVariants::unknownVariant($id);
+            }
+        }
+
+        self::guardVariants($this->type, $variants);
+
+        $sort = SortOrder::first();
+
+        foreach ($variants as $variant) {
+            $variant->moveTo($sort);
+            $sort = $sort->next();
+        }
+
+        $this->variants = $variants;
+    }
+
+    /**
      * Adds an image at the end. The first image of a product becomes the main image.
      */
     public function addImage(ImagePath $path): void

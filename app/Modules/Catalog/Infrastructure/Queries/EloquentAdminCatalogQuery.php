@@ -7,10 +7,13 @@ namespace App\Modules\Catalog\Infrastructure\Queries;
 use App\Modules\Catalog\Application\DTOs\AdminCategoryDetail;
 use App\Modules\Catalog\Application\DTOs\AdminCategoryFilter;
 use App\Modules\Catalog\Application\DTOs\AdminCategoryRow;
+use App\Modules\Catalog\Application\DTOs\AdminProductDetail;
 use App\Modules\Catalog\Application\DTOs\AdminProductFilter;
 use App\Modules\Catalog\Application\DTOs\AdminProductPage;
 use App\Modules\Catalog\Application\DTOs\AdminProductRow;
+use App\Modules\Catalog\Application\DTOs\AdminVariantRow;
 use App\Modules\Catalog\Application\DTOs\KitchenStationRow;
+use App\Modules\Catalog\Application\DTOs\ProductImageView;
 use App\Modules\Catalog\Application\DTOs\SizeTierRow;
 use App\Modules\Catalog\Application\DTOs\TagRow;
 use App\Modules\Catalog\Application\DTOs\TrashedCatalogItem;
@@ -18,6 +21,8 @@ use App\Modules\Catalog\Application\Queries\AdminCatalogQuery;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Category as CategoryModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\KitchenStation as KitchenStationModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Product as ProductModel;
+use App\Modules\Catalog\Infrastructure\Persistence\Models\ProductImage as ProductImageModel;
+use App\Modules\Catalog\Infrastructure\Persistence\Models\ProductVariant as ProductVariantModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\SizeTier as SizeTierModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Tag as TagModel;
 use App\Modules\Shared\Domain\ValueObjects\Money;
@@ -187,6 +192,46 @@ final class EloquentAdminCatalogQuery implements AdminCatalogQuery
             total: $page->total(),
             page: $page->currentPage(),
             perPage: $page->perPage(),
+        );
+    }
+
+    public function product(int $id): ?AdminProductDetail
+    {
+        // Three extra queries for the relations, whatever the number of variants and images.
+        $product = ProductModel::query()->with(['variants', 'images', 'tagsIncludingDeleted'])->find($id);
+
+        if ($product === null) {
+            return null;
+        }
+
+        return new AdminProductDetail(
+            id: $product->id,
+            type: $product->type,
+            categoryId: $product->category_id,
+            name: $product->name,
+            slug: $product->slug,
+            shortDescription: $product->short_description,
+            description: $product->description,
+            leadTimeClass: $product->lead_time_class,
+            leadTimeMinutes: $product->lead_time_minutes,
+            isNew: $product->is_new,
+            isHot: $product->is_hot,
+            isPublished: $product->is_published,
+            isAvailable: $product->is_available,
+            variants: array_values($product->variants->sortBy('sort')->map(fn (ProductVariantModel $variant): AdminVariantRow => new AdminVariantRow(
+                id: $variant->id,
+                label: $variant->label,
+                priceTaka: Money::fromPoisha($variant->price)->toTakaString(),
+                sizeTierId: $variant->size_tier_id,
+                isDefault: $variant->is_default,
+                isAvailable: $variant->is_available,
+            ))->all()),
+            images: array_values($product->images->sortBy('sort')->map(fn (ProductImageModel $image): ProductImageView => new ProductImageView(
+                originalPath: $image->path,
+                thumbnailPath: $image->thumbnail_path ?? $image->path,
+                isMain: $image->is_main,
+            ))->all()),
+            tagIds: array_values($product->tagsIncludingDeleted->map(fn (TagModel $tag): int => $tag->id)->sort()->values()->all()),
         );
     }
 

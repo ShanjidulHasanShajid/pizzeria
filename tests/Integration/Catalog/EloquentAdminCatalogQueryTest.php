@@ -6,6 +6,7 @@ use App\Modules\Catalog\Application\DTOs\AdminCategoryFilter;
 use App\Modules\Catalog\Application\DTOs\AdminCategoryRow;
 use App\Modules\Catalog\Application\DTOs\AdminProductFilter;
 use App\Modules\Catalog\Application\DTOs\AdminProductRow;
+use App\Modules\Catalog\Application\DTOs\AdminVariantRow;
 use App\Modules\Catalog\Application\DTOs\KitchenStationRow;
 use App\Modules\Catalog\Application\DTOs\SizeTierRow;
 use App\Modules\Catalog\Application\DTOs\TagRow;
@@ -16,6 +17,7 @@ use App\Modules\Catalog\Domain\Enums\TagType;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Category as CategoryModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\KitchenStation as KitchenStationModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Product as ProductModel;
+use App\Modules\Catalog\Infrastructure\Persistence\Models\ProductImage as ProductImageModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\ProductVariant as ProductVariantModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\SizeTier as SizeTierModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Tag as TagModel;
@@ -219,4 +221,28 @@ it('gives the details for the category form and the parent choices', function ()
         ->and($this->query->category($shakes->id)?->parentId)->toBe($drinks->id)
         ->and($this->query->category(424242))->toBeNull()
         ->and($this->query->topLevelCategoryOptions())->toBe([$pizza->id => 'Pizza', $drinks->id => 'Drinks']);
+});
+
+it('gives a product for the edit form with variants, images and tags in order', function (): void {
+    $product = ProductModel::factory()
+        ->has(ProductVariantModel::factory()->state(['label' => 'Large', 'price' => 125_050, 'sort' => 20]), 'variants')
+        ->has(ProductVariantModel::factory()->asDefault()->state(['label' => 'Personal', 'price' => 45_000, 'sort' => 10]), 'variants')
+        ->create();
+    ProductImageModel::factory()->for($product)->create(['path' => 'products/b.webp', 'sort' => 20]);
+    ProductImageModel::factory()->for($product)->main()->create(['path' => 'products/a.webp', 'thumbnail_path' => 'products/thumbs/a.webp', 'sort' => 10]);
+    $veg = TagModel::factory()->create();
+    $gone = TagModel::factory()->create();
+    $product->tags()->attach([$veg->id, $gone->id]);
+    $gone->delete();
+
+    $detail = $this->query->product($product->id);
+
+    expect(array_map(fn (AdminVariantRow $variant): string => $variant->label, $detail->variants))->toBe(['Personal', 'Large'])
+        ->and($detail->variants[1]->priceTaka)->toBe('1250.50')
+        ->and($detail->variants[0]->isDefault)->toBeTrue()
+        ->and($detail->images[0]->originalPath)->toBe('products/a.webp')
+        ->and($detail->images[0]->thumbnailPath)->toBe('products/thumbs/a.webp')
+        ->and($detail->images[1]->thumbnailPath)->toBe('products/b.webp')
+        ->and($detail->tagIds)->toBe([$veg->id, $gone->id])
+        ->and($this->query->product(424242))->toBeNull();
 });
