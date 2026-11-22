@@ -40,6 +40,22 @@ it('applies the access matrix', function (?string $role, string $uri, int $statu
     ['super_admin', '/admin/admin-users', 200],
     ['super_admin', '/admin/customers', 200],
     ['super_admin', '/account', 200],
+    // catalog (Phase 7): admins and super admins only
+    [null, '/admin/kitchen-stations', 302],
+    ['customer', '/admin/kitchen-stations', 403],
+    ['staff', '/admin/kitchen-stations', 403],
+    ['admin', '/admin/kitchen-stations', 200],
+    ['super_admin', '/admin/kitchen-stations', 200],
+    [null, '/admin/size-tiers', 302],
+    ['customer', '/admin/size-tiers', 403],
+    ['staff', '/admin/size-tiers', 403],
+    ['admin', '/admin/size-tiers', 200],
+    ['super_admin', '/admin/size-tiers', 200],
+    [null, '/admin/tags', 302],
+    ['customer', '/admin/tags', 403],
+    ['staff', '/admin/tags', 403],
+    ['admin', '/admin/tags', 200],
+    ['super_admin', '/admin/tags', 200],
 ]);
 
 it('sends a guest who opens the admin area to the login page', function (): void {
