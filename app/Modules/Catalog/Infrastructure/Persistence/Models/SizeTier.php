@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property-read int|null $variants_count only after withCount('variants')
  */
 class SizeTier extends Model
 {

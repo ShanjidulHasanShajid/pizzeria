@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property-read int|null $products_count only after withCount('products')
  */
 class Tag extends Model
 {

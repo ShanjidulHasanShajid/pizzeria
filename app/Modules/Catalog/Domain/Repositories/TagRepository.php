@@ -6,6 +6,7 @@ namespace App\Modules\Catalog\Domain\Repositories;
 
 use App\Modules\Catalog\Domain\Entities\Tag;
 use App\Modules\Shared\Domain\ValueObjects\Slug;
+use App\Modules\Shared\Domain\ValueObjects\SortOrder;
 
 interface TagRepository
 {
@@ -22,4 +23,7 @@ interface TagRepository
 
     /** Looks at deleted rows too. $ignoreId skips the tag that is being edited. */
     public function slugExists(Slug $slug, ?int $ignoreId = null): bool;
+
+    /** The position after the last item that is not deleted: 10 for the first one, then +10. */
+    public function nextSortOrder(): SortOrder;
 }

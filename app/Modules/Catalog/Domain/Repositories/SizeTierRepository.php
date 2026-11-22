@@ -6,6 +6,7 @@ namespace App\Modules\Catalog\Domain\Repositories;
 
 use App\Modules\Catalog\Domain\Entities\SizeTier;
 use App\Modules\Shared\Domain\ValueObjects\Slug;
+use App\Modules\Shared\Domain\ValueObjects\SortOrder;
 
 interface SizeTierRepository
 {
@@ -28,4 +29,7 @@ interface SizeTierRepository
 
     /** True when a variant that is not deleted uses this size. Phase 8 adds option prices to this check. */
     public function isInUse(int $id): bool;
+
+    /** The position after the last item that is not deleted: 10 for the first one, then +10. */
+    public function nextSortOrder(): SortOrder;
 }

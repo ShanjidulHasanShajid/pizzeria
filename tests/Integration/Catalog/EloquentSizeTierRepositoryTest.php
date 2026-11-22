@@ -78,3 +78,12 @@ it('knows when a variant that is not deleted uses a size tier', function (): voi
 
     expect($this->repository->isInUse($medium->id))->toBeFalse();
 });
+
+it('gives the position after the last size tier that is not deleted', function (): void {
+    expect($this->repository->nextSortOrder()->value())->toBe(10);
+
+    SizeTierModel::factory()->create(['sort' => 20]);
+    SizeTierModel::factory()->create(['sort' => 70])->delete();
+
+    expect($this->repository->nextSortOrder()->value())->toBe(30);
+});

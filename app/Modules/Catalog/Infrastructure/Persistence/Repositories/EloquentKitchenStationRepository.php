@@ -50,6 +50,14 @@ final class EloquentKitchenStationRepository implements KitchenStationRepository
         return CategoryModel::query()->where('kitchen_station_id', $id)->exists();
     }
 
+    public function nextSortOrder(): SortOrder
+    {
+        // max() skips rows in the Trash (SoftDeletes) and gives null for an empty table.
+        $highest = KitchenStationModel::query()->max('sort');
+
+        return $highest === null ? SortOrder::first() : SortOrder::fromInt((int) $highest)->next();
+    }
+
     private function toEntity(KitchenStationModel $model): KitchenStation
     {
         return KitchenStation::reconstitute($model->id, $model->name, SortOrder::fromInt($model->sort), $model->is_active);

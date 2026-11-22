@@ -58,6 +58,14 @@ final class EloquentTagRepository implements TagRepository
         return $query->exists();
     }
 
+    public function nextSortOrder(): SortOrder
+    {
+        // max() skips rows in the Trash (SoftDeletes) and gives null for an empty table.
+        $highest = TagModel::query()->max('sort');
+
+        return $highest === null ? SortOrder::first() : SortOrder::fromInt((int) $highest)->next();
+    }
+
     private function toEntity(TagModel $model): Tag
     {
         return Tag::reconstitute(

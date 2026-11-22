@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property-read int|null $categories_count only after withCount('categories')
  */
 class KitchenStation extends Model
 {

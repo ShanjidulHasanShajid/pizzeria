@@ -62,6 +62,14 @@ final class EloquentSizeTierRepository implements SizeTierRepository
         return ProductVariantModel::query()->where('size_tier_id', $id)->exists();
     }
 
+    public function nextSortOrder(): SortOrder
+    {
+        // max() skips rows in the Trash (SoftDeletes) and gives null for an empty table.
+        $highest = SizeTierModel::query()->max('sort');
+
+        return $highest === null ? SortOrder::first() : SortOrder::fromInt((int) $highest)->next();
+    }
+
     private function toEntity(SizeTierModel $model): SizeTier
     {
         return SizeTier::reconstitute(
