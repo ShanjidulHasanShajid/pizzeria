@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Catalog\Presentation\Http\Controllers\Admin\CategoryController;
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\KitchenStationController;
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\SizeTierController;
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\TagController;
@@ -55,5 +56,24 @@ Route::middleware('can:manage-catalog')->group(function (): void {
             Route::put('/{tag}', 'update')->name('update');
             Route::delete('/{tag}', 'destroy')->name('destroy');
             Route::post('/{tag}/restore', 'restore')->name('restore');
+        });
+
+    Route::prefix('categories')
+        ->name('categories.')
+        ->where(['category' => '[0-9]+'])
+        ->controller(CategoryController::class)
+        ->group(function (): void {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::post('/reorder', 'reorder')->name('reorder');
+            Route::get('/{category}/edit', 'edit')->name('edit');
+            Route::put('/{category}', 'update')->name('update');
+            Route::patch('/{category}/active', 'toggleActive')->name('toggle-active');
+            Route::patch('/{category}/featured', 'toggleFeatured')->name('toggle-featured');
+            Route::delete('/{category}', 'destroy')->name('destroy');
+            Route::post('/{category}/restore', 'restore')->name('restore');
+            // "Delete forever": super admins only (business rules section 2).
+            Route::delete('/{category}/force', 'forceDestroy')->middleware('can:force-delete')->name('force-destroy');
         });
 });

@@ -10,6 +10,7 @@ use App\Modules\Catalog\Infrastructure\Persistence\Mappers\CategoryMapper;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Category as CategoryModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Product as ProductModel;
 use App\Modules\Shared\Domain\ValueObjects\Slug;
+use App\Modules\Shared\Domain\ValueObjects\SortOrder;
 
 final class EloquentCategoryRepository implements CategoryRepository
 {
@@ -20,6 +21,40 @@ final class EloquentCategoryRepository implements CategoryRepository
         $model = CategoryModel::query()->find($id);
 
         return $model === null ? null : $this->mapper->toEntity($model);
+    }
+
+    public function findTrashed(int $id): ?Category
+    {
+        $model = CategoryModel::onlyTrashed()->find($id);
+
+        return $model === null ? null : $this->mapper->toEntity($model);
+    }
+
+    public function nextSortOrder(?int $parentId): SortOrder
+    {
+        // where('parent_id', null) would never match; whereNull() asks "IS NULL".
+        $query = CategoryModel::query();
+
+        if ($parentId === null) {
+            $query->whereNull('parent_id');
+        } else {
+            $query->where('parent_id', $parentId);
+        }
+
+        $highest = $query->max('sort');
+
+        return $highest === null ? SortOrder::first() : SortOrder::fromInt((int) $highest)->next();
+    }
+
+    public function isUsedIncludingTrash(int $id): bool
+    {
+        return ProductModel::withTrashed()->where('category_id', $id)->exists()
+            || CategoryModel::withTrashed()->where('parent_id', $id)->exists();
+    }
+
+    public function forceDelete(int $id): void
+    {
+        CategoryModel::onlyTrashed()->findOrFail($id)->forceDelete();
     }
 
     public function save(Category $category): int

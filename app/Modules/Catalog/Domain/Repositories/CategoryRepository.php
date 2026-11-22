@@ -6,6 +6,7 @@ namespace App\Modules\Catalog\Domain\Repositories;
 
 use App\Modules\Catalog\Domain\Entities\Category;
 use App\Modules\Shared\Domain\ValueObjects\Slug;
+use App\Modules\Shared\Domain\ValueObjects\SortOrder;
 
 interface CategoryRepository
 {
@@ -28,4 +29,24 @@ interface CategoryRepository
 
     /** True when a sub-category that is not deleted has this category as parent. */
     public function hasChildren(int $id): bool;
+
+    /**
+     * A category that is in the Trash, or null. Used before deleting forever.
+     */
+    public function findTrashed(int $id): ?Category;
+
+    /**
+     * The position after the last category (not deleted) with the same parent.
+     * Pass null for the top level.
+     */
+    public function nextSortOrder(?int $parentId): SortOrder;
+
+    /**
+     * True when any product or sub-category points to this category, also ones in the Trash.
+     * The database refuses to delete such a row for good (foreign keys).
+     */
+    public function isUsedIncludingTrash(int $id): bool;
+
+    /** Deletes a category that is in the Trash for good. */
+    public function forceDelete(int $id): void;
 }

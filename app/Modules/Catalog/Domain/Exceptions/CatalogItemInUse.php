@@ -21,4 +21,19 @@ final class CatalogItemInUse extends DomainException
     {
         return new self("\"{$name}\" is used by product variants. Remove it from those variants first.");
     }
+
+    public static function categoryWithProducts(string $name): self
+    {
+        return new self("\"{$name}\" still has products. Move them to another category or delete them first.");
+    }
+
+    public static function categoryWithSubCategories(string $name): self
+    {
+        return new self("\"{$name}\" has sub-categories. Move or delete them first.");
+    }
+
+    public static function categoryStillReferenced(string $name): self
+    {
+        return new self("\"{$name}\" cannot be deleted forever: products or sub-categories still belong to it, maybe in the Trash. Delete those forever first.");
+    }
 }
