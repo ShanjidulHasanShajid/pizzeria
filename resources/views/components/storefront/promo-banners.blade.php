@@ -1,19 +1,18 @@
+{{-- Each banner: title, image, url (null for a banner without a link). --}}
 @props(['banners'])
-@php
-    $tones = [
-        'brand' => 'bg-brand-600 text-white',
-        'accent' => 'bg-accent-700 text-white',
-    ];
-@endphp
 <section class="page-container py-8" aria-label="Promotions">
     <ul class="grid gap-4 md:grid-cols-2">
         @foreach ($banners as $banner)
-            <li class="flex items-center justify-between gap-4 rounded-card p-6 {{ $tones[$banner['tone']] ?? $tones['brand'] }}">
-                <div>
-                    <h2 class="font-display text-2xl font-bold">{{ $banner['title'] }}</h2>
-                    <p class="mt-1 text-white/90">{{ $banner['text'] }}</p>
-                </div>
-                <a href="{{ $banner['url'] }}" class="btn btn-md shrink-0 bg-white text-ink hover:bg-cream">{{ $banner['cta'] }}</a>
+            <li class="group relative flex min-h-48 items-end overflow-hidden rounded-card bg-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-600">
+                <img src="{{ $banner['image'] }}" alt="" loading="lazy" class="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105">
+                <div class="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" aria-hidden="true"></div>
+                <h2 class="relative p-6 font-display text-2xl font-bold text-white">
+                    @if ($banner['url'])
+                        <a href="{{ $banner['url'] }}" class="after:absolute after:inset-0">{{ $banner['title'] }}</a>
+                    @else
+                        {{ $banner['title'] }}
+                    @endif
+                </h2>
             </li>
         @endforeach
     </ul>

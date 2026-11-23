@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Modules\Content\Presentation\Support\StorefrontLayoutComposer;
 use App\Modules\Shared\Presentation\Support\MoneyFormatter;
 use Illuminate\Foundation\Console\ServeCommand;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -38,5 +40,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Every ->links() call uses our branded pagination view.
         Paginator::defaultView('vendor.pagination.brand');
+
+        // Settings, navbar, mega menu and branches for every shop page.
+        View::composer('components.layouts.storefront', StorefrontLayoutComposer::class);
     }
 }

@@ -1,3 +1,4 @@
+@props(['siteName', 'logoUrl' => null])
 @php
     $cartCount = 3; // fake until the cart exists (Phase 11)
 @endphp
@@ -7,10 +8,7 @@
             <x-icon name="bars-3" class="h-6 w-6" />
         </button>
 
-        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2">
-            <img src="{{ asset('images/logo-mark.svg') }}" alt="" class="h-9 w-9 md:h-10 md:w-10">
-            <span class="font-display text-xl font-bold text-brand-700 md:text-2xl">{{ config('app.name') }}</span>
-        </a>
+        <x-storefront.logo :site-name="$siteName" :logo-url="$logoUrl" name-class="text-xl text-brand-700 md:text-2xl" />
 
         <form action="{{ route('search') }}" method="GET" role="search" class="relative mx-auto hidden max-w-xl flex-1 md:block">
             <label for="site-search" class="sr-only">Search the menu</label>
