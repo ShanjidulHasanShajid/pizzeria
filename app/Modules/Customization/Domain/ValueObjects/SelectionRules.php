@@ -10,7 +10,7 @@ use App\Modules\Shared\Domain\Exceptions\InvalidValue;
  * How many options a customer may pick from one group on one product.
  * - Required: at least the minimum (which is then 1 or more).
  * - Optional: none at all, or between the minimum and the maximum.
- * - Free count: that many of the cheapest picks cost nothing.
+ * - Free count: that many of the cheapest paid picks cost nothing.
  */
 final readonly class SelectionRules
 {

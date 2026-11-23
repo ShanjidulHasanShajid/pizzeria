@@ -25,7 +25,7 @@ use App\Modules\Shared\Domain\ValueObjects\SortOrder;
 | Group 1 "Crust" (required, exactly 1): Regular ৳0, Thin ৳0, Stuffed ৳100/150/200,
 |   Cheese-filled only Medium ৳180 / Large ৳250, Gluten-free ৳120 (sold out).
 | Group 2 "Extra toppings" (optional, up to 3 unless a test says otherwise):
-|   Olives ৳60, Mushrooms ৳80, Pepperoni ৳100/150/200, Jalapeños ৳50, Corn ৳50.
+|   Olives ৳60, Mushrooms ৳80, Pepperoni ৳100/150/200, Jalapeños ৳50, Corn ৳50, Basil ৳0.
 | Group 3 "Dips": Garlic dip ৳40. It is NOT attached to the Margherita.
 */
 
@@ -72,6 +72,7 @@ function pricingGroups(bool $crustActive = true): array
             pricingOption(23, 'Pepperoni', 30, [1 => '100', 2 => '150', 3 => '200']),
             pricingOption(24, 'Jalapeños', 40, '50'),
             pricingOption(25, 'Corn', 50, '50'),
+            pricingOption(26, 'Basil', 60, '0'),
         ]),
         OptionGroup::reconstitute(3, 'Dips', 'Dips', null, true, SortOrder::fromInt(30), [
             pricingOption(31, 'Garlic dip', 10, '40'),
@@ -156,6 +157,16 @@ describe('prices', function (): void {
         expect($line->unitPrice()->poisha())->toBe(90_000) // 850 + Corn 50, Jalapeños (id 24) free
             ->and($line->options()[1]->optionName())->toBe('Jalapeños')
             ->and($line->options()[1]->isFreePick())->toBeTrue();
+    });
+
+    it('never spends a free pick on an option that is free anyway', function (): void {
+        $line = pricingQuote(102, [1 => [11], 2 => [21, 26]], toppings: SelectionRules::upTo(3, freeCount: 1));
+
+        expect($line->unitPrice()->poisha())->toBe(85_000) // Basil is free anyway, so Olives (60) are the free pick
+            ->and($line->options()[1]->optionName())->toBe('Olives')
+            ->and($line->options()[1]->isFreePick())->toBeTrue()
+            ->and($line->options()[2]->optionName())->toBe('Basil')
+            ->and($line->options()[2]->isFreePick())->toBeFalse();
     });
 
     it('multiplies the unit price by the quantity', function (): void {

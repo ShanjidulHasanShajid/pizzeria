@@ -19,7 +19,7 @@ use App\Modules\Shared\Domain\ValueObjects\Money;
 /**
  * The one place where a line is priced (business rules section 4):
  * the chosen variant's price + every chosen option at the variant's size,
- * checked against the rules of each attached group, with the cheapest picks free.
+ * checked against the rules of each attached group, with the cheapest paid picks free.
  * Pure PHP: everything it needs is passed in, so it is fast and easy to test.
  */
 final class PricingEngine
@@ -173,8 +173,9 @@ final class PricingEngine
     }
 
     /**
-     * The ids of the $count cheapest picks ("the cheapest N picks are free").
-     * On equal prices the lower id wins, so the result is always the same.
+     * The ids of the $count cheapest picks that cost something (decision 34): an option that is
+     * free anyway never uses up a free pick. On equal prices the lower id wins, so the result
+     * is always the same.
      *
      * @param  array<int, Money>  $prices  option id => price
      * @return list<int>
@@ -185,7 +186,7 @@ final class PricingEngine
             return [];
         }
 
-        $ids = array_keys($prices);
+        $ids = array_keys(array_filter($prices, fn (Money $price): bool => ! $price->isZero()));
         usort($ids, fn (int $a, int $b): int => [$prices[$a]->poisha(), $a] <=> [$prices[$b]->poisha(), $b]);
 
         return array_slice($ids, 0, $count);
