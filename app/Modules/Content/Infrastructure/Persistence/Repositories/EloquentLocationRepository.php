@@ -65,6 +65,11 @@ final class EloquentLocationRepository implements LocationRepository
         LocationModel::onlyTrashed()->findOrFail($id)->restore();
     }
 
+    public function forceDelete(int $id): void
+    {
+        LocationModel::onlyTrashed()->findOrFail($id)->forceDelete();
+    }
+
     public function nextSortOrder(): SortOrder
     {
         $highest = LocationModel::query()->max('sort');

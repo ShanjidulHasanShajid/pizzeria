@@ -12,7 +12,7 @@ use DateTimeImmutable;
 final readonly class TrashedCatalogItem
 {
     /**
-     * @param  'kitchen_station'|'size_tier'|'tag'|'category'|'product'|'option_group'|'option'  $kind
+     * @param  'kitchen_station'|'size_tier'|'tag'|'category'|'product'  $kind
      */
     public function __construct(
         public string $kind,

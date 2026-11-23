@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Modules\Catalog\Presentation\Support\CatalogTrash;
+use App\Modules\Content\Presentation\Support\ContentTrash;
 use App\Modules\Content\Presentation\Support\StorefrontLayoutComposer;
+use App\Modules\Customization\Presentation\Support\OptionTrash;
+use App\Modules\Shared\Presentation\Http\Controllers\Admin\TrashController;
 use App\Modules\Shared\Presentation\Support\MoneyFormatter;
+use App\Modules\Shared\Presentation\Support\TrashSource;
 use Illuminate\Foundation\Console\ServeCommand;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
@@ -19,7 +24,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Every module with deletable records adds its source here (the tabs appear in this order).
+        $this->app->tag([CatalogTrash::class, OptionTrash::class, ContentTrash::class], TrashSource::class);
+        $this->app->when(TrashController::class)->needs('$sources')->giveTagged(TrashSource::class);
     }
 
     /**

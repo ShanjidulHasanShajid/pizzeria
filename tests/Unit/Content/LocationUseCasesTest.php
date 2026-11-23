@@ -8,6 +8,7 @@ use App\Modules\Content\Application\DTOs\SaveLocationInput;
 use App\Modules\Content\Application\Services\LocationInputReader;
 use App\Modules\Content\Application\UseCases\Locations\CreateLocation;
 use App\Modules\Content\Application\UseCases\Locations\DeleteLocation;
+use App\Modules\Content\Application\UseCases\Locations\ForceDeleteLocation;
 use App\Modules\Content\Application\UseCases\Locations\ReorderLocations;
 use App\Modules\Content\Application\UseCases\Locations\RestoreLocation;
 use App\Modules\Content\Application\UseCases\Locations\ToggleLocation;
@@ -117,4 +118,16 @@ it('tells other modules when a branch is open; unknown and switched-off ones nev
 
     expect($schedule->isOpenAt($id, $monday))->toBeFalse()
         ->and($schedule->nextOpeningAfter($id, $monday))->toBeNull();
+});
+
+it('deletes a location of the Trash forever, and no other', function (): void {
+    $input = new LocationIdInput(($this->create)());
+    $forceDelete = new ForceDeleteLocation($this->locations);
+
+    expect(fn () => $forceDelete->handle($input))->toThrow(EntityNotFound::class);
+
+    (new DeleteLocation($this->locations))->handle($input);
+    $forceDelete->handle($input);
+
+    expect(fn () => (new RestoreLocation($this->locations))->handle($input))->toThrow(EntityNotFound::class);
 });

@@ -7,7 +7,6 @@ use App\Modules\Catalog\Presentation\Http\Controllers\Admin\KitchenStationContro
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\ProductController;
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\SizeTierController;
 use App\Modules\Catalog\Presentation\Http\Controllers\Admin\TagController;
-use App\Modules\Catalog\Presentation\Http\Controllers\Admin\TrashController;
 use Illuminate\Support\Facades\Route;
 
 // Loaded with prefix "/admin", names "admin." and middleware web + auth + staff
@@ -99,6 +98,4 @@ Route::middleware('can:manage-catalog')->group(function (): void {
             Route::post('/{product}/restore', 'restore')->name('restore');
             Route::delete('/{product}/force', 'forceDestroy')->middleware('can:force-delete')->name('force-destroy');
         });
-
-    Route::get('/trash', [TrashController::class, 'index'])->name('trash.index');
 });

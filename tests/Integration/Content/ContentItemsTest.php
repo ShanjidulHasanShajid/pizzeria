@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Modules\Content\Application\DTOs\ContentItemView;
+use App\Modules\Content\Application\DTOs\TrashedContentItem;
 use App\Modules\Content\Application\Queries\ContentQuery;
+use App\Modules\Content\Application\Queries\TrashedContentQuery;
 use App\Modules\Content\Domain\Enums\ContentType;
 use App\Modules\Content\Domain\Repositories\ContentItemRepository;
 use App\Modules\Content\Domain\ValueObjects\ContentItem;
@@ -120,4 +122,23 @@ it('shows a scheduled item only inside its dates, also from the cache', function
     $clock->advance('+40 days');
     expect($visible())->toBe(['Always'])
         ->and($states())->toBe(['expired', 'visible', 'inactive']);
+});
+
+it('finds an item in the Trash, lists it and deletes it forever', function (): void {
+    $id = ($this->saveBanner)('Offer');
+    $photo = $this->items->save(ContentItem::create(ContentType::GalleryImage, ['image' => 'a.webp'], DateRange::always(), true, SortOrder::first()));
+    expect($this->items->findDeleted(ContentType::Banner, $id))->toBeNull();
+
+    $this->items->delete(ContentType::Banner, $id);
+    $this->items->delete(ContentType::GalleryImage, $photo);
+
+    $names = array_map(fn (TrashedContentItem $item): string => $item->name, app(TrashedContentQuery::class)->items());
+
+    expect($this->items->findDeleted(ContentType::Banner, $id)->imagePaths())->toBe(['a.webp'])
+        ->and($names)->toBe(['Offer', "Gallery image {$photo}"]);
+
+    $this->items->forceDelete(ContentType::Banner, $id);
+
+    $this->assertDatabaseCount('banners', 0);
+    expect(fn () => $this->items->forceDelete(ContentType::Banner, $id))->toThrow(ModelNotFoundException::class);
 });

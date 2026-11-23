@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Modules\Catalog\Application\Ports\OptionTrash;
 use App\Modules\Catalog\Application\Ports\SizeTierPrices;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Category as CategoryModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Product as ProductModel;
@@ -15,6 +14,7 @@ use App\Modules\Customization\Domain\Entities\ProductOptionGroup;
 use App\Modules\Customization\Domain\Repositories\OptionGroupRepository;
 use App\Modules\Customization\Domain\Repositories\ProductOptionGroupRepository;
 use App\Modules\Customization\Domain\ValueObjects\SelectionRules;
+use App\Modules\Customization\Presentation\Support\OptionTrash;
 use App\Modules\Shared\Domain\ValueObjects\Money;
 use App\Modules\Shared\Domain\ValueObjects\SortOrder;
 
@@ -74,7 +74,7 @@ it('deletes a group for good, with all its options, and knows every image path',
     $this->assertDatabaseCount('options', 0);
 });
 
-it('lists deleted groups and options for the Trash screen of the catalog', function (): void {
+it('lists deleted groups and options for the Trash screen', function (): void {
     ($this->removeOption)($this->thin);
     $this->groups->delete($this->groups->save(OptionGroup::create('Old dips', 'Dips', SortOrder::fromInt(20))));
 

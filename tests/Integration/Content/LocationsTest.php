@@ -100,3 +100,13 @@ it('works out "open now" with the clock, also after midnight', function (): void
         ->and(app(BranchScheduleQuery::class)->isOpenAt($id, $clock->now()))->toBeTrue()
         ->and($query->location(424242))->toBeNull();
 });
+
+it('deletes a location of the Trash forever, and no other', function (): void {
+    $id = ($this->save)('Dhanmondi');
+    expect(fn () => $this->locations->forceDelete($id))->toThrow(ModelNotFoundException::class);
+
+    $this->locations->delete($id);
+    $this->locations->forceDelete($id);
+
+    $this->assertDatabaseCount('locations', 0);
+});

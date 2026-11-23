@@ -27,6 +27,9 @@ interface LocationRepository
 
     public function restore(int $id): void;
 
+    /** Removes a location of the Trash for good. */
+    public function forceDelete(int $id): void;
+
     /** The position after the last location that is not deleted: 10 for the first one, then +10. */
     public function nextSortOrder(): SortOrder;
 }

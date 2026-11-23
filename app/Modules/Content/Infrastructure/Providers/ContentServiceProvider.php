@@ -12,6 +12,7 @@ use App\Modules\Content\Application\Queries\LocationQuery;
 use App\Modules\Content\Application\Queries\NavigationQuery;
 use App\Modules\Content\Application\Queries\SettingsQuery;
 use App\Modules\Content\Application\Queries\SiteLayoutQuery;
+use App\Modules\Content\Application\Queries\TrashedContentQuery;
 use App\Modules\Content\Domain\Repositories\ContentItemRepository;
 use App\Modules\Content\Domain\Repositories\HomeLayoutRepository;
 use App\Modules\Content\Domain\Repositories\LocationRepository;
@@ -30,6 +31,7 @@ use App\Modules\Content\Infrastructure\Persistence\Repositories\EloquentNavItemR
 use App\Modules\Content\Infrastructure\Persistence\Repositories\EloquentSettingsRepository;
 use App\Modules\Content\Infrastructure\Queries\CatalogHomePageQuery;
 use App\Modules\Content\Infrastructure\Queries\CatalogSiteLayoutQuery;
+use App\Modules\Content\Infrastructure\Queries\EloquentTrashedContentQuery;
 use App\Modules\Content\Infrastructure\Queries\RepositoryBranchScheduleQuery;
 use App\Modules\Content\Infrastructure\Queries\RepositoryContentQuery;
 use App\Modules\Content\Infrastructure\Queries\RepositoryLocationQuery;
@@ -59,6 +61,7 @@ final class ContentServiceProvider extends ModuleServiceProvider
         BranchScheduleQuery::class => RepositoryBranchScheduleQuery::class,
         SiteLayoutQuery::class => CatalogSiteLayoutQuery::class,
         HomePageQuery::class => CatalogHomePageQuery::class,
+        TrashedContentQuery::class => EloquentTrashedContentQuery::class,
     ];
 
     public function register(): void

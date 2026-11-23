@@ -57,6 +57,15 @@ final class InMemoryLocationRepository implements LocationRepository
         unset($this->deleted[$id]);
     }
 
+    public function forceDelete(int $id): void
+    {
+        if (! isset($this->deleted[$id])) {
+            throw EntityNotFound::withId('Location', $id);
+        }
+
+        unset($this->locations[$id], $this->deleted[$id]);
+    }
+
     public function nextSortOrder(): SortOrder
     {
         $locations = $this->all();

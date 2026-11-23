@@ -28,6 +28,12 @@ interface ContentItemRepository
 
     public function restore(ContentType $type, int $id): void;
 
+    /** An item in the Trash, or null. */
+    public function findDeleted(ContentType $type, int $id): ?ContentItem;
+
+    /** Removes an item of the Trash for good. */
+    public function forceDelete(ContentType $type, int $id): void;
+
     /** The position after the last item that is not deleted: 10 for the first one, then +10. */
     public function nextSortOrder(ContentType $type): SortOrder;
 }

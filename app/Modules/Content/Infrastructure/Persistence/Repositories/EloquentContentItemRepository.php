@@ -7,11 +7,8 @@ namespace App\Modules\Content\Infrastructure\Persistence\Repositories;
 use App\Modules\Content\Domain\Enums\ContentType;
 use App\Modules\Content\Domain\Repositories\ContentItemRepository;
 use App\Modules\Content\Domain\ValueObjects\ContentItem;
-use App\Modules\Content\Infrastructure\Persistence\Models\Banner;
 use App\Modules\Content\Infrastructure\Persistence\Models\ContentModel;
-use App\Modules\Content\Infrastructure\Persistence\Models\GalleryImage;
-use App\Modules\Content\Infrastructure\Persistence\Models\HeroSlide;
-use App\Modules\Content\Infrastructure\Persistence\Models\TrustBadge;
+use App\Modules\Content\Infrastructure\Persistence\Models\ContentModels;
 use App\Modules\Shared\Domain\ValueObjects\DateRange;
 use App\Modules\Shared\Domain\ValueObjects\SortOrder;
 use DateTimeImmutable;
@@ -63,6 +60,18 @@ final class EloquentContentItemRepository implements ContentItemRepository
         $this->model($type)::onlyTrashed()->findOrFail($id)->restore();
     }
 
+    public function findDeleted(ContentType $type, int $id): ?ContentItem
+    {
+        $model = $this->model($type)::onlyTrashed()->find($id);
+
+        return $model === null ? null : $this->toItem($type, $model);
+    }
+
+    public function forceDelete(ContentType $type, int $id): void
+    {
+        $this->model($type)::onlyTrashed()->findOrFail($id)->forceDelete();
+    }
+
     public function nextSortOrder(ContentType $type): SortOrder
     {
         // max() skips rows in the Trash (SoftDeletes) and gives null for an empty table.
@@ -73,12 +82,7 @@ final class EloquentContentItemRepository implements ContentItemRepository
 
     private function model(ContentType $type): ContentModel
     {
-        return match ($type) {
-            ContentType::HeroSlide => new HeroSlide,
-            ContentType::Banner => new Banner,
-            ContentType::TrustBadge => new TrustBadge,
-            ContentType::GalleryImage => new GalleryImage,
-        };
+        return ContentModels::for($type);
     }
 
     private function toItem(ContentType $type, ContentModel $model): ContentItem

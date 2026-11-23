@@ -10,6 +10,7 @@ use App\Modules\Content\Application\Queries\ContentQuery;
 use App\Modules\Content\Application\UseCases\Items\AddGalleryImages;
 use App\Modules\Content\Application\UseCases\Items\CreateContentItem;
 use App\Modules\Content\Application\UseCases\Items\DeleteContentItem;
+use App\Modules\Content\Application\UseCases\Items\ForceDeleteContentItem;
 use App\Modules\Content\Application\UseCases\Items\ReorderContentItems;
 use App\Modules\Content\Application\UseCases\Items\RestoreContentItem;
 use App\Modules\Content\Application\UseCases\Items\ToggleContentItem;
@@ -91,6 +92,13 @@ final class ContentItemController
         $this->runAction(fn () => $restoreItem->handle(new ContentItemInput($type, $item)));
 
         return back()->with('success', $type->singular().' restored.');
+    }
+
+    public function forceDestroy(int $item, ContentType $type, ForceDeleteContentItem $forceDelete): RedirectResponse
+    {
+        $this->runAction(fn () => $forceDelete->handle(new ContentItemInput($type, $item)));
+
+        return back()->with('success', $type->singular().' deleted forever.');
     }
 
     public function reorder(ContentType $type, ReorderRequest $request, ReorderContentItems $reorderItems): Response

@@ -9,6 +9,7 @@ use App\Modules\Content\Application\DTOs\ReorderLocationsInput;
 use App\Modules\Content\Application\Queries\LocationQuery;
 use App\Modules\Content\Application\UseCases\Locations\CreateLocation;
 use App\Modules\Content\Application\UseCases\Locations\DeleteLocation;
+use App\Modules\Content\Application\UseCases\Locations\ForceDeleteLocation;
 use App\Modules\Content\Application\UseCases\Locations\ReorderLocations;
 use App\Modules\Content\Application\UseCases\Locations\RestoreLocation;
 use App\Modules\Content\Application\UseCases\Locations\ToggleLocation;
@@ -81,6 +82,13 @@ final class LocationController
         $this->runAction(fn () => $restoreLocation->handle(new LocationIdInput($location)));
 
         return back()->with('success', 'Location restored.');
+    }
+
+    public function forceDestroy(int $location, ForceDeleteLocation $forceDelete): RedirectResponse
+    {
+        $this->runAction(fn () => $forceDelete->handle(new LocationIdInput($location)));
+
+        return back()->with('success', 'Location deleted forever.');
     }
 
     public function reorder(ReorderRequest $request, ReorderLocations $reorderLocations): Response

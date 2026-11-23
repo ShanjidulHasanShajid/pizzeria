@@ -87,6 +87,11 @@ final class CachedLocationRepository implements LocationRepository
         $this->clear();
     }
 
+    public function forceDelete(int $id): void
+    {
+        $this->inner->forceDelete($id); // was not in the cached list
+    }
+
     public function nextSortOrder(): SortOrder
     {
         return $this->inner->nextSortOrder();

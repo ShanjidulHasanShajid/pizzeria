@@ -12,6 +12,7 @@ use App\Modules\Content\Application\Services\ContentInputReader;
 use App\Modules\Content\Application\UseCases\Items\AddGalleryImages;
 use App\Modules\Content\Application\UseCases\Items\CreateContentItem;
 use App\Modules\Content\Application\UseCases\Items\DeleteContentItem;
+use App\Modules\Content\Application\UseCases\Items\ForceDeleteContentItem;
 use App\Modules\Content\Application\UseCases\Items\ReorderContentItems;
 use App\Modules\Content\Application\UseCases\Items\RestoreContentItem;
 use App\Modules\Content\Application\UseCases\Items\ToggleContentItem;
@@ -182,4 +183,20 @@ it('adds several gallery photos at once, all or none', function (): void {
     $this->items->failNextSave();
     expect(fn () => $add('three'))->toThrow(RuntimeException::class);
     expect($this->files->paths())->toHaveCount(2);
+});
+
+it('deletes an item of the Trash forever with its files', function (): void {
+    $id = ($this->create)();
+    $input = new ContentItemInput(ContentType::Banner, $id);
+    $forceDelete = new ForceDeleteContentItem($this->items, $this->images);
+
+    expect(fn () => $forceDelete->handle($input))->toThrow(EntityNotFound::class); // not in the Trash yet
+    expect($this->files->paths())->toHaveCount(1);
+
+    (new DeleteContentItem($this->items))->handle($input);
+    $forceDelete->handle($input);
+
+    expect($this->files->paths())->toBe([])
+        ->and($this->items->findDeleted(ContentType::Banner, $id))->toBeNull();
+    expect(fn () => $forceDelete->handle($input))->toThrow(EntityNotFound::class);
 });

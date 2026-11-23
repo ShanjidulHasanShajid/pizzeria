@@ -70,6 +70,16 @@ final class InMemoryContentItemRepository implements ContentItemRepository
         unset($this->deleted[$type->value][$id]);
     }
 
+    public function findDeleted(ContentType $type, int $id): ?ContentItem
+    {
+        return isset($this->deleted[$type->value][$id]) ? ($this->items[$type->value][$id] ?? null) : null;
+    }
+
+    public function forceDelete(ContentType $type, int $id): void
+    {
+        unset($this->items[$type->value][$id], $this->deleted[$type->value][$id]);
+    }
+
     public function nextSortOrder(ContentType $type): SortOrder
     {
         $items = $this->all($type);

@@ -44,6 +44,7 @@ Route::middleware('can:manage-content')->group(function (): void {
                 Route::patch('/{item}/toggle', 'toggle')->name('toggle')->defaults('type', $type->value);
                 Route::delete('/{item}', 'destroy')->name('destroy')->defaults('type', $type->value);
                 Route::post('/{item}/restore', 'restore')->name('restore')->defaults('type', $type->value);
+                Route::delete('/{item}/force', 'forceDestroy')->middleware('can:force-delete')->name('force-destroy')->defaults('type', $type->value);
             });
     }
 
@@ -68,5 +69,6 @@ Route::middleware('can:manage-content')->group(function (): void {
         Route::patch('/{location}/toggle', 'toggle')->name('toggle');
         Route::delete('/{location}', 'destroy')->name('destroy');
         Route::post('/{location}/restore', 'restore')->name('restore');
+        Route::delete('/{location}/force', 'forceDestroy')->middleware('can:force-delete')->name('force-destroy');
     });
 });

@@ -85,6 +85,16 @@ final class CachedContentItemRepository implements ContentItemRepository
         $this->clear($type);
     }
 
+    public function findDeleted(ContentType $type, int $id): ?ContentItem
+    {
+        return $this->inner->findDeleted($type, $id);
+    }
+
+    public function forceDelete(ContentType $type, int $id): void
+    {
+        $this->inner->forceDelete($type, $id); // was not in the cached list
+    }
+
     public function nextSortOrder(ContentType $type): SortOrder
     {
         return $this->inner->nextSortOrder($type);
