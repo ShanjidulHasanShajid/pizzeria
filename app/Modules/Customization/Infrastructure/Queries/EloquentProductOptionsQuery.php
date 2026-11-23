@@ -29,6 +29,22 @@ final class EloquentProductOptionsQuery implements ProductOptionsQuery
         return array_values($attachments->map(fn (ProductOptionGroupModel $attachment): ProductOptionGroupView => $this->toView($attachment))->all());
     }
 
+    public function productIdsWithOptions(array $productIds): array
+    {
+        if ($productIds === []) {
+            return [];
+        }
+
+        return array_values(ProductOptionGroupModel::query()
+            ->whereIn('product_id', $productIds)
+            ->whereHas('optionGroup', fn (Builder $group) => $group->where('is_active', true))
+            ->distinct()
+            ->orderBy('product_id')
+            ->pluck('product_id')
+            ->map(fn (mixed $id): int => (int) $id)
+            ->all());
+    }
+
     private function toView(ProductOptionGroupModel $attachment): ProductOptionGroupView
     {
         $group = $attachment->optionGroup;
