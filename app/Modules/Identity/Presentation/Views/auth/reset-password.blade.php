@@ -1,4 +1,4 @@
-<x-layouts.storefront title="Choose a new password">
+<x-layouts.storefront title="Choose a new password" :noindex="true">
     <x-auth.card title="Choose a new password">
         <form method="POST" action="{{ route('password.store') }}" class="space-y-4" novalidate>
             @csrf

@@ -1,12 +1,15 @@
-{{-- $site (SiteLayout), $logoUrl and $faviconUrl come from StorefrontLayoutComposer. --}}
-@props(['title' => null, 'description' => 'Fresh pizza, pies, pasta and more, delivered across Dhaka.'])
+{{--
+    $site (SiteLayout), $logoUrl and $faviconUrl come from StorefrontLayoutComposer.
+    canonical: the one right address of the page; without it the address without its query.
+    image: for link previews; without it the logo. noindex: hide the page from search engines.
+--}}
+@props(['title' => null, 'description' => 'Fresh pizza, pies, pasta and more, delivered across Dhaka.', 'canonical' => null, 'image' => null, 'noindex' => false])
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ? $title.' | ' : '' }}{{ $site->settings->siteName }}</title>
-    <meta name="description" content="{{ $description }}">
+    <x-storefront.meta :title="($title ? $title.' | ' : '').$site->settings->siteName" :description="$description" :canonical="$canonical ?? url()->current()" :site-name="$site->settings->siteName" :image="$image ?? $logoUrl" :noindex="$noindex" />
     @if ($faviconUrl)
         <link rel="icon" href="{{ $faviconUrl }}" type="image/webp">
     @else

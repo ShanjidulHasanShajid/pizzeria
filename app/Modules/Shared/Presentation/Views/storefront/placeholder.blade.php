@@ -1,4 +1,4 @@
-<x-layouts.storefront :title="$title">
+<x-layouts.storefront :title="$title" :noindex="true">
     <div class="page-container py-8">
         <x-breadcrumbs :items="[['label' => 'Home', 'url' => route('home')], ['label' => $title]]" />
         <h1 class="mt-4 font-display text-3xl font-bold md:text-4xl">{{ $title }}</h1>
