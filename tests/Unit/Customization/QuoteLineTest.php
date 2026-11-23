@@ -26,10 +26,14 @@ use Tests\Unit\Customization\Fakes\InMemoryProductOptionGroupRepository;
 | Margherita (product 10): Medium ৳850 (variant 102, size tier 2).
 | Group 1 "Crust", required: Regular ৳0 (option 1), Stuffed ৳150 at Medium (option 2).
 | Group 2 "Extra toppings", up to 3, 1 free: Olives ৳60 (option 3), Corn ৳50 (option 4).
+| Product 11 is hidden.
 */
 beforeEach(function (): void {
     $products = new InMemoryPricingProductSource;
     $products->add(new PricingProduct(10, 'Margherita', true, true, [
+        new PricingVariant(102, 'Medium', Money::fromTaka('850'), 2, true),
+    ]));
+    $products->add(new PricingProduct(11, 'Secret pizza', false, true, [
         new PricingVariant(102, 'Medium', Money::fromTaka('850'), 2, true),
     ]));
 
@@ -104,3 +108,24 @@ it('refuses a quantity or an id that cannot exist', function (): void {
     expect(fn () => ($this->quote)([1 => [1]], quantity: 0))->toThrow(InvalidValue::class);
     expect(fn () => ($this->quote)([1 => [0]]))->toThrow(InvalidValue::class);
 });
+
+it('refuses an option that was marked sold out after the page was opened', function (): void {
+    $crust = $this->groups->find(1);
+    $crust->option(2)->markSoldOut();
+    $this->groups->save($crust);
+
+    expect(fn () => ($this->quote)([1 => [2]]))->toThrow(PricingFailed::class, 'sold out');
+});
+
+it('ignores a group that was switched off: not required, and not offered', function (): void {
+    $crust = $this->groups->find(1);
+    $crust->deactivate();
+    $this->groups->save($crust);
+
+    expect(($this->quote)([])->unitPrice->poisha())->toBe(85_000);
+    expect(fn () => ($this->quote)([1 => [1]]))->toThrow(PricingFailed::class, 'not offered');
+});
+
+it('refuses a hidden product', function (): void {
+    ($this->quote)([], productId: 11);
+})->throws(PricingFailed::class, 'is not on the menu');
