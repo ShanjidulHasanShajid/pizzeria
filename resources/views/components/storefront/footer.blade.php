@@ -1,30 +1,48 @@
-@inject('placeholder', 'App\Modules\Shared\Presentation\Support\PlaceholderData')
+{{-- $settings: SiteSettings. $locations: list<LocationView>. --}}
+@props(['settings', 'locations', 'logoUrl' => null])
+@use('App\Modules\Content\Presentation\Support\ShopFormat')
+@php
+    $social = array_filter(['Facebook' => $settings->facebookUrl, 'Instagram' => $settings->instagramUrl, 'YouTube' => $settings->youtubeUrl]);
+@endphp
 <footer class="mt-12 bg-ink text-white/80">
     <div class="page-container grid gap-10 py-12 md:grid-cols-2 lg:grid-cols-5">
         <div class="lg:col-span-2">
-            <a href="{{ route('home') }}" class="flex items-center gap-2">
-                <img src="{{ asset('images/logo-mark.svg') }}" alt="" class="h-10 w-10">
-                <span class="font-display text-2xl font-bold text-white">{{ config('app.name') }}</span>
-            </a>
-            <p class="mt-4 max-w-sm text-sm">Hand-stretched pizza, fresh pasta and warm desserts, made to order in Dhaka and delivered hot to your door.</p>
+            <x-storefront.logo :site-name="$settings->siteName" :logo-url="$logoUrl" name-class="text-2xl text-white" />
+            @if ($settings->aboutText !== '')
+                <p class="mt-4 max-w-sm text-sm">{{ $settings->aboutText }}</p>
+            @endif
 
-            <h2 class="mt-6 text-sm font-semibold uppercase tracking-wider text-white">Our branches</h2>
-            <ul class="mt-2 space-y-3 text-sm">
-                @foreach ($placeholder->branches() as $branch)
-                    <li>
-                        <p class="font-semibold text-white">{{ $branch['name'] }}</p>
-                        <p>{{ $branch['address'] }}</p>
-                        <p><a href="tel:{{ preg_replace('/\D/', '', $branch['phone']) }}" class="hover:text-cheese">{{ $branch['phone'] }}</a></p>
-                    </li>
-                @endforeach
-            </ul>
+            @if ($settings->addressLine !== '' || $settings->phone !== '' || $settings->email !== '')
+                <ul class="mt-4 space-y-1 text-sm">
+                    @if ($settings->addressLine !== '')
+                        <li>{{ $settings->addressLine }}</li>
+                    @endif
+                    @if ($settings->phone !== '')
+                        <li><a href="{{ ShopFormat::phoneHref($settings->phone) }}" class="hover:text-cheese">{{ $settings->phone }}</a></li>
+                    @endif
+                    @if ($settings->email !== '')
+                        <li><a href="mailto:{{ $settings->email }}" class="hover:text-cheese">{{ $settings->email }}</a></li>
+                    @endif
+                </ul>
+            @endif
 
-            <h2 class="mt-6 text-sm font-semibold uppercase tracking-wider text-white">Opening hours</h2>
-            <dl class="mt-2 space-y-1 text-sm">
-                @foreach ($placeholder->openingHours() as $days => $hours)
-                    <div class="flex gap-2"><dt class="font-medium text-white">{{ $days }}:</dt><dd>{{ $hours }}</dd></div>
-                @endforeach
-            </dl>
+            @if ($locations !== [])
+                <h2 class="mt-6 text-sm font-semibold uppercase tracking-wider text-white">Our branches</h2>
+                <ul class="mt-2 space-y-4 text-sm">
+                    @foreach ($locations as $location)
+                        <li>
+                            <p class="font-semibold text-white">{{ $location->name }}</p>
+                            <p>{{ $location->address }}{{ $location->area === '' ? '' : ', '.$location->area }}</p>
+                            <p><a href="{{ ShopFormat::phoneHref($location->phone) }}" class="hover:text-cheese">{{ $location->phone }}</a></p>
+                            <dl class="mt-1 space-y-0.5">
+                                @foreach (ShopFormat::openingHours($location->hours) as $line)
+                                    <div class="flex gap-2"><dt class="font-medium text-white">{{ $line['days'] }}:</dt><dd>{{ $line['hours'] }}</dd></div>
+                                @endforeach
+                            </dl>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
         </div>
 
         <div>
@@ -55,15 +73,17 @@
                 <li><a href="{{ route('legal.terms') }}" class="hover:text-cheese">Terms</a></li>
                 <li><a href="{{ route('legal.privacy') }}" class="hover:text-cheese">Privacy</a></li>
             </ul>
-            <h2 class="mt-6 text-sm font-semibold uppercase tracking-wider text-white">Follow us</h2>
-            <ul class="mt-3 flex gap-4 text-sm">
-                @foreach ($placeholder->socialLinks() as $link)
-                    <li><a href="{{ $link['url'] }}" class="hover:text-cheese">{{ $link['label'] }}</a></li>
-                @endforeach
-            </ul>
+            @if ($social !== [])
+                <h2 class="mt-6 text-sm font-semibold uppercase tracking-wider text-white">Follow us</h2>
+                <ul class="mt-3 flex flex-wrap gap-4 text-sm">
+                    @foreach ($social as $label => $url)
+                        <li><a href="{{ $url }}" target="_blank" rel="noopener noreferrer" class="hover:text-cheese">{{ $label }}</a></li>
+                    @endforeach
+                </ul>
+            @endif
         </div>
     </div>
     <div class="border-t border-white/10">
-        <p class="page-container py-4 text-xs text-white/60">&copy; {{ now()->year }} {{ config('app.name') }}. All rights reserved.</p>
+        <p class="page-container py-4 text-xs text-white/60">&copy; {{ now()->year }} {{ $settings->siteName }}. All rights reserved.</p>
     </div>
 </footer>

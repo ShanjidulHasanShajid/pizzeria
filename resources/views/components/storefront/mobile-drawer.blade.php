@@ -1,4 +1,7 @@
-@inject('placeholder', 'App\Modules\Shared\Presentation\Support\PlaceholderData')
+{{-- $items: list<NavItemView>. $groups: list<CategoryNode>. --}}
+@props(['siteName', 'items', 'groups'])
+@use('App\Modules\Content\Domain\Enums\NavRoute')
+@use('App\Modules\Content\Presentation\Support\NavLinks')
 <div x-show="drawer" x-cloak class="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Site menu">
     <div class="absolute inset-0 bg-ink/60" x-on:click="drawer = false" aria-hidden="true"></div>
 
@@ -9,7 +12,7 @@
         class="relative h-full w-80 max-w-[85%] overflow-y-auto bg-white p-5 shadow-pop">
 
         <div class="flex items-center justify-between">
-            <span class="font-display text-xl font-bold text-brand-700">{{ config('app.name') }}</span>
+            <span class="font-display text-xl font-bold text-brand-700">{{ $siteName }}</span>
             <button type="button" x-on:click="drawer = false" aria-label="Close menu" class="p-2 text-muted hover:text-ink">
                 <x-icon name="x-mark" class="h-6 w-6" />
             </button>
@@ -17,30 +20,31 @@
 
         <nav class="mt-6" aria-label="Mobile">
             <ul class="divide-y divide-line">
-                @foreach ($placeholder->navItems() as $item)
-                    @if ($item['key'] === 'menu')
+                @foreach ($items as $item)
+                    @if ($item->route === NavRoute::Menu && $groups !== [])
                         <li x-data="{ open: false }">
-                            <button type="button" class="flex w-full items-center justify-between py-3 text-left font-semibold"
+                            <button type="button" class="flex w-full items-center justify-between py-3 text-left font-semibold {{ $item->isHighlighted ? 'text-brand-700' : '' }}"
                                 x-on:click="open = ! open" x-bind:aria-expanded="open.toString()">
-                                {{ $item['label'] }}
+                                {{ $item->label }}
                                 <x-icon name="chevron-down" class="h-5 w-5 transition" x-bind:class="open ? 'rotate-180' : ''" />
                             </button>
-                            <ul x-show="open" x-collapse class="pb-3 pl-3">
-                                @foreach ($placeholder->menuGroups() as $group)
+                            <ul x-show="open" x-cloak x-collapse class="pb-3 pl-3">
+                                <li><a href="{{ route(NavLinks::routeName($item->route)) }}" class="block py-2 text-sm font-medium">View everything</a></li>
+                                @foreach ($groups as $group)
                                     <li x-data="{ sub: false }">
                                         <div class="flex items-center justify-between">
-                                            <a href="{{ route('categories.show', $group['slug']) }}" class="flex-1 py-2 text-sm font-medium">{{ $group['name'] }}</a>
-                                            @if ($group['children'] !== [])
-                                                <button type="button" class="p-2 text-muted" aria-label="Show {{ $group['name'] }} sub-categories"
+                                            <a href="{{ route('categories.show', $group->slug) }}" class="flex-1 py-2 text-sm font-medium">{{ $group->name }}</a>
+                                            @if ($group->children !== [])
+                                                <button type="button" class="p-2 text-muted" aria-label="Show {{ $group->name }} sub-categories"
                                                     x-on:click="sub = ! sub" x-bind:aria-expanded="sub.toString()">
                                                     <x-icon name="chevron-down" class="h-4 w-4 transition" x-bind:class="sub ? 'rotate-180' : ''" />
                                                 </button>
                                             @endif
                                         </div>
-                                        @if ($group['children'] !== [])
-                                            <ul x-show="sub" x-collapse class="pl-3">
-                                                @foreach ($group['children'] as $child)
-                                                    <li><a href="{{ route('categories.show', $child['slug']) }}" class="block py-1.5 text-sm text-muted">{{ $child['name'] }}</a></li>
+                                        @if ($group->children !== [])
+                                            <ul x-show="sub" x-cloak x-collapse class="pl-3">
+                                                @foreach ($group->children as $child)
+                                                    <li><a href="{{ route('categories.show', $child->slug) }}" class="block py-1.5 text-sm text-muted">{{ $child->name }}</a></li>
                                                 @endforeach
                                             </ul>
                                         @endif
@@ -49,7 +53,7 @@
                             </ul>
                         </li>
                     @else
-                        <li><a href="{{ route($item['route']) }}" class="block py-3 font-semibold">{{ $item['label'] }}</a></li>
+                        <li><a href="{{ route(NavLinks::routeName($item->route)) }}" class="block py-3 font-semibold {{ $item->isHighlighted ? 'text-brand-700' : '' }}">{{ $item->label }}</a></li>
                     @endif
                 @endforeach
             </ul>
@@ -72,4 +76,3 @@
         </nav>
     </div>
 </div>
-

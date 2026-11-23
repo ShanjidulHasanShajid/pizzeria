@@ -12,8 +12,6 @@ use Illuminate\Support\Facades\Route;
 */
 $placeholder = 'shared::storefront.placeholder';
 
-Route::view('/', 'shared::storefront.home')->name('home');
-
 Route::view('/menu', $placeholder, ['title' => 'Menu', 'phase' => 10, 'showProducts' => true])->name('menu.index');
 Route::view('/menu/{category}', $placeholder, ['title' => 'Category', 'phase' => 10, 'showProducts' => true])->name('categories.show');
 Route::view('/products/{product}', $placeholder, ['title' => 'Product', 'phase' => 10])->name('products.show');

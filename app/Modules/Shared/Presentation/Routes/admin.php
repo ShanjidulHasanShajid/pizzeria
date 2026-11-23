@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
+use App\Modules\Shared\Presentation\Http\Controllers\Admin\TrashController;
 use Illuminate\Support\Facades\Route;
 
 // Loaded by ModuleServiceProvider with the prefix "/admin", names starting "admin." and the
 // middleware web + auth + staff. Sections that staff must NOT see add ->middleware('admin').
 
 Route::view('/', 'shared::admin.dashboard')->name('dashboard');
+
+// Deleted records of all modules (TrashSource).
+Route::get('/trash', [TrashController::class, 'index'])->middleware('can:access-admin-sections')->name('trash.index');
 
 // Development only. Removed in Phase 24.
 if (! app()->isProduction()) {

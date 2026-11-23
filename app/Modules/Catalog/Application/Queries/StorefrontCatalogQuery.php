@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Application\Queries;
 
 use App\Modules\Catalog\Application\DTOs\CategoryNode;
+use App\Modules\Catalog\Application\DTOs\CategorySection;
+use App\Modules\Catalog\Application\DTOs\CategorySectionRequest;
 use App\Modules\Catalog\Application\DTOs\ProductCard;
 use App\Modules\Catalog\Application\DTOs\ProductDetail;
 use App\Modules\Catalog\Application\DTOs\ProductPricingFacts;
@@ -39,6 +41,16 @@ interface StorefrontCatalogQuery
      * @return list<ProductCard>
      */
     public function showcaseProducts(int $categoryId, int $limit): array;
+
+    /**
+     * Several categories with some of their products at once, always with the same number of
+     * database queries. One answer per request, in the same order; null for a category that is
+     * hidden, deleted or unknown. Products of active sub-categories count too.
+     *
+     * @param  list<CategorySectionRequest>  $requests
+     * @return list<?CategorySection>
+     */
+    public function categorySections(array $requests): array;
 
     /** The product page, or null (the page then answers 404). */
     public function productDetail(string $slug): ?ProductDetail;

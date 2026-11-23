@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Infrastructure\Providers;
 
-use App\Modules\Catalog\Application\Ports\OptionTrash;
 use App\Modules\Catalog\Application\Ports\SizeTierPrices;
 use App\Modules\Catalog\Application\Queries\AdminCatalogQuery;
 use App\Modules\Catalog\Application\Queries\StorefrontCatalogQuery;
@@ -13,7 +12,6 @@ use App\Modules\Catalog\Domain\Repositories\KitchenStationRepository;
 use App\Modules\Catalog\Domain\Repositories\ProductRepository;
 use App\Modules\Catalog\Domain\Repositories\SizeTierRepository;
 use App\Modules\Catalog\Domain\Repositories\TagRepository;
-use App\Modules\Catalog\Infrastructure\Adapters\CustomizationOptionTrash;
 use App\Modules\Catalog\Infrastructure\Adapters\CustomizationSizeTierPrices;
 use App\Modules\Catalog\Infrastructure\Persistence\Repositories\EloquentCategoryRepository;
 use App\Modules\Catalog\Infrastructure\Persistence\Repositories\EloquentKitchenStationRepository;
@@ -41,7 +39,6 @@ final class CatalogServiceProvider extends ModuleServiceProvider
         StorefrontCatalogQuery::class => EloquentStorefrontCatalogQuery::class,
         AdminCatalogQuery::class => EloquentAdminCatalogQuery::class,
         SizeTierPrices::class => CustomizationSizeTierPrices::class,
-        OptionTrash::class => CustomizationOptionTrash::class,
     ];
 
     protected function moduleName(): string

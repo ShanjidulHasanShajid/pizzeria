@@ -1,3 +1,4 @@
+{{-- At least one slide. Each: image, mobileImage (or null), title, text, cta, url (null for no button). --}}
 @props(['slides'])
 @php
     $count = count($slides);
@@ -67,19 +68,28 @@
                     aria-label="{{ $item['real'] + 1 }} of {{ $count }}"
                     x-bind:inert="current !== {{ $item['real'] }}" x-bind:aria-hidden="current !== {{ $item['real'] }}"
                 @endif>
-                <img src="{{ $slide['image'] }}" alt="" class="absolute inset-0 h-full w-full object-cover opacity-30">
+                <picture>
+                    @if ($slide['mobileImage'])
+                        <source media="(max-width: 767px)" srcset="{{ $slide['mobileImage'] }}">
+                    @endif
+                    <img src="{{ $slide['image'] }}" alt="" class="absolute inset-0 h-full w-full object-cover opacity-30">
+                </picture>
                 <div class="page-container relative py-16 md:py-28">
                     <div class="max-w-xl text-white">
-                        <p class="text-sm font-semibold uppercase tracking-widest text-cheese">{{ $slide['eyebrow'] }}</p>
-                        <h2 class="mt-2 font-display text-4xl font-bold md:text-5xl">{{ $slide['title'] }}</h2>
-                        <p class="mt-4 text-lg text-white/90">{{ $slide['text'] }}</p>
-                        <x-link-button :href="$slide['url']" size="lg" class="mt-6">{{ $slide['cta'] }}</x-link-button>
+                        <h2 class="font-display text-4xl font-bold md:text-5xl">{{ $slide['title'] }}</h2>
+                        @if ($slide['text'] !== '')
+                            <p class="mt-4 text-lg text-white/90">{{ $slide['text'] }}</p>
+                        @endif
+                        @if ($slide['url'])
+                            <x-link-button :href="$slide['url']" size="lg" class="mt-6">{{ $slide['cta'] }}</x-link-button>
+                        @endif
                     </div>
                 </div>
             </div>
         @endforeach
     </div>
 
+    @if ($count > 1)
     <button type="button" x-on:click="prev()" aria-label="Previous slide"
         class="absolute left-2 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/20 p-2 text-white hover:bg-white/40 md:block">
         <x-icon name="chevron-left" class="h-6 w-6" />
@@ -95,4 +105,5 @@
                 x-bind:class="current === {{ $i }} ? 'bg-white' : 'bg-white/40'" class="h-2.5 w-2.5 rounded-full"></button>
         @endforeach
     </div>
+    @endif
 </section>

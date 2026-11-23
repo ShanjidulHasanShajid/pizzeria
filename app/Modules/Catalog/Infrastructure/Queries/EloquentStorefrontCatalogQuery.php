@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Infrastructure\Queries;
 
 use App\Modules\Catalog\Application\DTOs\CategoryNode;
+use App\Modules\Catalog\Application\DTOs\CategorySection;
+use App\Modules\Catalog\Application\DTOs\CategorySectionRequest;
 use App\Modules\Catalog\Application\DTOs\ProductCard;
 use App\Modules\Catalog\Application\DTOs\ProductDetail;
 use App\Modules\Catalog\Application\DTOs\ProductImageView;
@@ -21,6 +23,8 @@ use App\Modules\Catalog\Infrastructure\Persistence\Models\ProductVariant as Prod
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Tag as TagModel;
 use App\Modules\Shared\Domain\ValueObjects\Money;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * The shop pages read the catalog here. Every product query starts from visibleProducts(),
@@ -46,6 +50,42 @@ final class EloquentStorefrontCatalogQuery implements StorefrontCatalogQuery
             $this->visibleProducts()->whereIn('category_id', $this->categoryAndChildren($categoryId)),
             $limit,
         );
+    }
+
+    public function categorySections(array $requests): array
+    {
+        if ($requests === []) {
+            return [];
+        }
+
+        $categories = $this->onlyVisible(CategoryModel::query())
+            ->whereKey(array_map(fn (CategorySectionRequest $request): int => $request->categoryId, $requests))
+            ->with('children')
+            ->get()
+            ->keyBy('id');
+
+        $chosenIds = $this->chosenProductIds($requests, $categories);
+        $allIds = array_values(array_unique(array_merge(...$chosenIds)));
+        $cards = [];
+
+        foreach ($allIds === [] ? [] : $this->cards($this->visibleProducts()->whereKey($allIds)) as $card) {
+            $cards[$card->id] = $card;
+        }
+
+        $sections = [];
+
+        foreach ($requests as $position => $request) {
+            $category = $categories->get($request->categoryId);
+
+            $sections[] = $category === null ? null : new CategorySection(
+                id: $category->id,
+                name: $category->name,
+                slug: $category->slug,
+                products: array_values(array_filter(array_map(fn (int $id): ?ProductCard => $cards[$id] ?? null, $chosenIds[$position]))),
+            );
+        }
+
+        return $sections;
     }
 
     public function productDetail(string $slug): ?ProductDetail
@@ -186,12 +226,59 @@ final class EloquentStorefrontCatalogQuery implements StorefrontCatalogQuery
         return ProductModel::query()
             ->where('is_published', true)
             ->whereHas('variants')
-            ->whereHas('category', function (Builder $category): void {
-                $category->where('is_active', true)
-                    ->where(function (Builder $topLevelOrActiveParent): void {
-                        $topLevelOrActiveParent->whereNull('parent_id')
-                            ->orWhereHas('parent', fn (Builder $parent) => $parent->where('is_active', true));
-                    });
+            ->whereHas('category', fn (Builder $category) => $this->onlyVisible($category));
+    }
+
+    /**
+     * For every request the ids of the products to show. One light query for all categories
+     * (only ids, in sort order); the cards are loaded later, and only for the chosen ones.
+     *
+     * @param  list<CategorySectionRequest>  $requests
+     * @param  Collection<int, CategoryModel>  $categories  by id, with their children
+     * @return list<list<int>>
+     */
+    private function chosenProductIds(array $requests, Collection $categories): array
+    {
+        $familyOf = fn (CategoryModel $category): array => [$category->id, ...$category->children->modelKeys()];
+        $candidates = $this->visibleProducts()
+            ->whereIn('category_id', $categories->flatMap($familyOf)->unique()->values()->all())
+            ->orderBy('sort')
+            ->orderBy('id')
+            ->get(['id', 'category_id']);
+
+        $chosen = [];
+
+        foreach ($requests as $request) {
+            $category = $categories->get($request->categoryId);
+            $available = [];
+
+            if ($category !== null) {
+                foreach ($candidates->whereIn('category_id', $familyOf($category)) as $product) {
+                    $available[] = $product->id;
+                }
+            }
+
+            $picked = array_intersect($request->pickedProductIds, $available);
+            $chosen[] = array_slice(array_values(array_unique([...$picked, ...$available])), 0, $request->limit);
+        }
+
+        return $chosen;
+    }
+
+    /**
+     * Active categories that are not deleted; for a sub-category the parent must be active too.
+     *
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $categories
+     * @return Builder<TModel>
+     */
+    private function onlyVisible(Builder $categories): Builder
+    {
+        return $categories->where('is_active', true)
+            ->where(function (Builder $topLevelOrActiveParent): void {
+                $topLevelOrActiveParent->whereNull('parent_id')
+                    ->orWhereHas('parent', fn (Builder $parent) => $parent->where('is_active', true));
             });
     }
 

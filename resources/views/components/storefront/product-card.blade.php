@@ -1,6 +1,9 @@
+{{-- $product: a ProductCard, or (until Phase 10) a fake array of PlaceholderData. --}}
 @props(['product'])
+@inject('cards', 'App\Modules\Catalog\Presentation\Support\ProductCards')
 @php
-    $state = $product['state']; // simple | options | combo | soldout
+    $product = is_array($product) ? $product : $cards->toArray($product);
+    $state = $product['state']; // simple | view | options | combo | soldout
     $soldOut = $state === 'soldout';
     $url = route('products.show', $product['slug']);
 @endphp
@@ -14,7 +17,7 @@
                     <x-badge variant="soldout">Sold out</x-badge>
                 @endif
                 @foreach ($product['badges'] as $badge)
-                    <x-badge :variant="$badge">{{ ucfirst($badge) }}</x-badge>
+                    <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
                 @endforeach
             </div>
         @endif
@@ -25,11 +28,14 @@
         <p class="mt-1 line-clamp-2 text-sm text-muted">{{ $product['description'] }}</p>
 
         <div class="mt-auto flex items-center justify-between gap-2 pt-4">
-            <x-money :amount="$product['price']" :from="in_array($state, ['options', 'combo'], true)" />
+            <x-money :amount="$product['price']" :from="$product['isFromPrice'] ?? in_array($state, ['options', 'combo'], true)" />
 
             @switch($state)
                 @case('simple')
                     <x-button size="sm" aria-label="Add {{ $product['name'] }} to cart">Add to cart</x-button>
+                    @break
+                @case('view')
+                    <x-link-button :href="$url" variant="outline" size="sm">View details</x-link-button>
                     @break
                 @case('options')
                     <x-link-button :href="$url" variant="outline" size="sm">Choose options</x-link-button>
