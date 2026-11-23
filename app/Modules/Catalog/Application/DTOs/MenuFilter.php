@@ -19,6 +19,7 @@ final readonly class MenuFilter
      * @param  ?string  $pageTag  slug of the tag page; always applied, not a choice of the customer
      * @param  list<string>  $tagSlugs  a product must have all of them
      * @param  ?Money  $minPrice  compared with the price on the card
+     * @param  string  $search  the words of the search page; "" on all other pages
      */
     public function __construct(
         public ?int $categoryId = null,
@@ -30,9 +31,10 @@ final readonly class MenuFilter
         public ProductSort $sort = ProductSort::Recommended,
         public int $page = 1,
         public int $perPage = self::PER_PAGE,
+        public string $search = '',
     ) {}
 
-    /** Did the customer choose anything? */
+    /** Did the customer choose anything? The words of a search are the page itself, not a choice. */
     public function isActive(): bool
     {
         return $this->tagSlugs !== []

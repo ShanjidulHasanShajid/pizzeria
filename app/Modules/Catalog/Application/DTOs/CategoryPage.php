@@ -17,6 +17,7 @@ final readonly class CategoryPage
         public string $name,
         public string $slug,
         public ?string $description,
+        public ?string $imagePath,
         public ?string $parentName,
         public ?string $parentSlug,
         public array $children,

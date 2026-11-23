@@ -57,6 +57,30 @@ final class StorefrontReader
     }
 
     /**
+     * Products whose name or short description contains the words.
+     *
+     * @param  Builder<ProductModel>  $query
+     * @return Builder<ProductModel>
+     */
+    public function matching(Builder $query, string $term): Builder
+    {
+        $like = $this->contains($term);
+
+        return $query->where(function (Builder $match) use ($like): void {
+            $match->where('name', 'like', $like)->orWhere('short_description', 'like', $like);
+        });
+    }
+
+    /**
+     * @param  Builder<ProductModel>  $query
+     * @return Builder<ProductModel>
+     */
+    public function nameMatchesFirst(Builder $query, string $term): Builder
+    {
+        return $query->orderByRaw('case when name like ? then 0 else 1 end', [$this->contains($term)]);
+    }
+
+    /**
      * Cards in sort order.
      *
      * @param  Builder<ProductModel>  $query
@@ -140,6 +164,12 @@ final class StorefrontReader
             ->sortBy('sort')
             ->map(fn (CategoryModel $child): CategoryNode => $this->toNode($child))
             ->all());
+    }
+
+    /** Escapes % and _ so a search for "50%" does not act as a wildcard. */
+    private function contains(string $term): string
+    {
+        return '%'.addcslashes($term, '%_\\').'%';
     }
 
     private function toCard(ProductModel $product, bool $hasOptions): ProductCard

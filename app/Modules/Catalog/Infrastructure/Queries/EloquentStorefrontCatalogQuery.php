@@ -19,7 +19,6 @@ use App\Modules\Catalog\Infrastructure\Persistence\Models\Product as ProductMode
 use App\Modules\Catalog\Infrastructure\Persistence\Models\ProductImage as ProductImageModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\ProductVariant as ProductVariantModel;
 use App\Modules\Shared\Domain\ValueObjects\Money;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
@@ -162,16 +161,9 @@ final class EloquentStorefrontCatalogQuery implements StorefrontCatalogQuery
             return [];
         }
 
-        // Escape % and _ so a search for "50%" does not act as a wildcard.
-        $like = '%'.addcslashes($term, '%_\\').'%';
+        $query = $this->reader->matching($this->reader->visibleProducts(), $term);
 
-        return $this->reader->cards(
-            $this->reader->visibleProducts()->where(function (Builder $query) use ($like): void {
-                $query->where('name', 'like', $like)
-                    ->orWhere('short_description', 'like', $like);
-            }),
-            $limit,
-        );
+        return $this->reader->cards($this->reader->nameMatchesFirst($query, $term), $limit);
     }
 
     public function pricingFacts(int $productId): ?ProductPricingFacts

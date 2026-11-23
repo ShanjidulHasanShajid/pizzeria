@@ -8,6 +8,7 @@ use App\Modules\Catalog\Application\Ports\ProductOptions;
 use App\Modules\Catalog\Application\Ports\SizeTierPrices;
 use App\Modules\Catalog\Application\Queries\AdminCatalogQuery;
 use App\Modules\Catalog\Application\Queries\MenuQuery;
+use App\Modules\Catalog\Application\Queries\SitemapQuery;
 use App\Modules\Catalog\Application\Queries\StorefrontCatalogQuery;
 use App\Modules\Catalog\Domain\Repositories\CategoryRepository;
 use App\Modules\Catalog\Domain\Repositories\KitchenStationRepository;
@@ -23,8 +24,12 @@ use App\Modules\Catalog\Infrastructure\Persistence\Repositories\EloquentSizeTier
 use App\Modules\Catalog\Infrastructure\Persistence\Repositories\EloquentTagRepository;
 use App\Modules\Catalog\Infrastructure\Queries\EloquentAdminCatalogQuery;
 use App\Modules\Catalog\Infrastructure\Queries\EloquentMenuQuery;
+use App\Modules\Catalog\Infrastructure\Queries\EloquentSitemapQuery;
 use App\Modules\Catalog\Infrastructure\Queries\EloquentStorefrontCatalogQuery;
 use App\Modules\Shared\Infrastructure\Providers\ModuleServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 final class CatalogServiceProvider extends ModuleServiceProvider
 {
@@ -43,9 +48,18 @@ final class CatalogServiceProvider extends ModuleServiceProvider
         StorefrontCatalogQuery::class => EloquentStorefrontCatalogQuery::class,
         AdminCatalogQuery::class => EloquentAdminCatalogQuery::class,
         MenuQuery::class => EloquentMenuQuery::class,
+        SitemapQuery::class => EloquentSitemapQuery::class,
         SizeTierPrices::class => CustomizationSizeTierPrices::class,
         ProductOptions::class => CustomizationProductOptions::class,
     ];
+
+    public function boot(): void
+    {
+        parent::boot();
+
+        // Typing causes many requests, so the limit is generous: one per second on average.
+        RateLimiter::for('search-suggestions', fn (Request $request): Limit => Limit::perMinute(60)->by((string) $request->ip()));
+    }
 
     protected function moduleName(): string
     {

@@ -17,7 +17,9 @@ final class MenuFilterReader
 {
     private const MAX_TAGS = 10;
 
-    public function read(Request $request, ?int $categoryId = null, ?string $pageTag = null): MenuFilter
+    private const MAX_SEARCH_LENGTH = 60;
+
+    public function read(Request $request, ?int $categoryId = null, ?string $pageTag = null, bool $withSearch = false): MenuFilter
     {
         return new MenuFilter(
             categoryId: $categoryId,
@@ -28,6 +30,7 @@ final class MenuFilterReader
             onlyAvailable: $request->query('available') === '1',
             sort: ProductSort::tryFrom($this->text($request->query('sort'))) ?? ProductSort::Recommended,
             page: $this->page($request->query('page')),
+            search: $withSearch ? $this->search($request->query('q')) : '',
         );
     }
 
@@ -60,6 +63,14 @@ final class MenuFilterReader
         $text = $this->text($value);
 
         return preg_match('/^\d{1,6}$/D', $text) === 1 ? max(1, (int) $text) : 1;
+    }
+
+    /** Broken UTF-8 gives "". */
+    private function search(mixed $value): string
+    {
+        $words = preg_replace('/\s+/u', ' ', $this->text($value)) ?? '';
+
+        return trim(mb_substr(trim($words), 0, self::MAX_SEARCH_LENGTH));
     }
 
     private function text(mixed $value): string

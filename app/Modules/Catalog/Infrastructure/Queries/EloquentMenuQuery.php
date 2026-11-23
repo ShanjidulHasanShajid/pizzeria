@@ -65,6 +65,7 @@ final class EloquentMenuQuery implements MenuQuery
             name: $category->name,
             slug: $category->slug,
             description: $category->description,
+            imagePath: $category->image_path,
             parentName: $category->parent?->name,
             parentSlug: $category->parent?->slug,
             children: $this->reader->activeChildren($category),
@@ -96,7 +97,7 @@ final class EloquentMenuQuery implements MenuQuery
         $total = $query->count();
         $page = min(max(1, $filter->page), max(1, (int) ceil($total / $filter->perPage)));
 
-        $this->sort($query, $filter->sort);
+        $this->sort($query, $filter);
 
         return new ProductCardPage(
             $this->reader->load($query->forPage($page, $filter->perPage)),
@@ -112,6 +113,10 @@ final class EloquentMenuQuery implements MenuQuery
     private function filtered(MenuFilter $filter): Builder
     {
         $query = $this->reader->visibleProducts();
+
+        if ($filter->search !== '') {
+            $this->reader->matching($query, $filter->search);
+        }
 
         if ($filter->categoryId !== null) {
             $query->whereIn('category_id', CategoryModel::query()
@@ -144,9 +149,13 @@ final class EloquentMenuQuery implements MenuQuery
     /**
      * @param  Builder<ProductModel>  $query
      */
-    private function sort(Builder $query, ProductSort $sort): void
+    private function sort(Builder $query, MenuFilter $filter): void
     {
-        match ($sort) {
+        if ($filter->search !== '' && $filter->sort === ProductSort::Recommended) {
+            $this->reader->nameMatchesFirst($query, $filter->search);
+        }
+
+        match ($filter->sort) {
             ProductSort::Recommended => $query->orderBy('sort'),
             ProductSort::Newest => $query->orderByDesc('created_at')->orderByDesc('id'),
             ProductSort::PriceLowToHigh => $query->orderBy($this->cardPrice())->orderBy('sort'),
