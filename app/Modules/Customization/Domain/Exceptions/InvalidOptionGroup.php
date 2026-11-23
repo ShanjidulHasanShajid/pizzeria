@@ -20,4 +20,9 @@ final class InvalidOptionGroup extends DomainException
     {
         return new self("Option {$optionId} does not belong to this group.");
     }
+
+    public static function orderDoesNotMatch(): self
+    {
+        return new self('The list must contain every option of the group once. Reload the page and try again.');
+    }
 }

@@ -130,6 +130,53 @@ final class OptionGroup extends AggregateRoot
         $option->rename($newName);
     }
 
+    /**
+     * Takes an option out of the group. Saving the group then moves its row to the Trash.
+     */
+    public function removeOption(int $optionId): void
+    {
+        if ($this->option($optionId) === null) {
+            throw InvalidOptionGroup::unknownOption($optionId);
+        }
+
+        $this->options = array_values(array_filter(
+            $this->options,
+            fn (Option $option): bool => $option->id() !== $optionId,
+        ));
+    }
+
+    /**
+     * Puts the options in this order (sort 10, 20, 30 ...). Every option must appear exactly once.
+     *
+     * @param  list<int>  $optionIds
+     */
+    public function reorderOptions(array $optionIds): void
+    {
+        $expected = array_map(fn (Option $option): ?int => $option->id(), $this->options);
+        $given = $optionIds;
+        sort($expected);
+        sort($given);
+
+        if ($given !== $expected) {
+            throw InvalidOptionGroup::orderDoesNotMatch();
+        }
+
+        $sort = SortOrder::first();
+
+        foreach ($optionIds as $optionId) {
+            $this->option($optionId)?->moveTo($sort);
+            $sort = $sort->next();
+        }
+    }
+
+    /** The position after the last option: 10 for the first one, then +10. */
+    public function nextOptionSort(): SortOrder
+    {
+        $options = $this->options();
+
+        return $options === [] ? SortOrder::first() : $options[count($options) - 1]->sort()->next();
+    }
+
     /** The saved option with this id, or null. */
     public function option(int $optionId): ?Option
     {

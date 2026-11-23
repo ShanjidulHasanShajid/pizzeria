@@ -112,3 +112,12 @@ it('returns null for an unknown id and refuses to delete it', function (): void 
     expect($this->repository->find(424242))->toBeNull();
     expect(fn () => $this->repository->delete(424242))->toThrow(ModelNotFoundException::class);
 });
+
+it('gives the position after the last group that is not deleted', function (): void {
+    expect($this->repository->nextSortOrder()->value())->toBe(10);
+
+    $this->repository->save(OptionGroup::create('Dips', 'Dips', SortOrder::fromInt(20)));
+    $this->repository->delete($this->repository->save(OptionGroup::create('Old', 'Old', SortOrder::fromInt(70))));
+
+    expect($this->repository->nextSortOrder()->value())->toBe(30);
+});

@@ -64,3 +64,43 @@ it('lists the options in sort order and finds one by id', function (): void {
         ->and($group->option(12)?->name())->toBe('Thin')
         ->and($group->option(99))->toBeNull();
 });
+
+it('removes an option and gives the next position after the last one', function (): void {
+    $group = OptionGroup::reconstitute(1, 'Pizza crusts', 'Crust', null, true, SortOrder::first(), [
+        savedCrustOption(11, 'Regular', 10),
+        savedCrustOption(12, 'Thin', 20),
+    ]);
+
+    expect($group->nextOptionSort()->value())->toBe(30);
+
+    $group->removeOption(12);
+
+    expect($group->option(12))->toBeNull()
+        ->and($group->nextOptionSort()->value())->toBe(20)
+        ->and(OptionGroup::create('New', 'New', SortOrder::first())->nextOptionSort()->value())->toBe(10);
+    expect(fn () => $group->removeOption(12))->toThrow(InvalidOptionGroup::class);
+});
+
+it('puts its options in a new order', function (): void {
+    $group = OptionGroup::reconstitute(1, 'Pizza crusts', 'Crust', null, true, SortOrder::first(), [
+        savedCrustOption(11, 'Regular', 10),
+        savedCrustOption(12, 'Thin', 20),
+    ]);
+
+    $group->reorderOptions([12, 11]);
+
+    expect(array_map(fn (Option $option): string => $option->name(), $group->options()))->toBe(['Thin', 'Regular']);
+});
+
+it('refuses an order that does not name every option once', function (array $ids): void {
+    $group = OptionGroup::reconstitute(1, 'Pizza crusts', 'Crust', null, true, SortOrder::first(), [
+        savedCrustOption(11, 'Regular', 10),
+        savedCrustOption(12, 'Thin', 20),
+    ]);
+
+    $group->reorderOptions($ids);
+})->throws(InvalidOptionGroup::class)->with([
+    'one missing' => [[11]],
+    'one twice' => [[11, 11]],
+    'one unknown' => [[11, 99]],
+]);

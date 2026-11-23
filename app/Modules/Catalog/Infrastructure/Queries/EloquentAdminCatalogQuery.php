@@ -18,6 +18,7 @@ use App\Modules\Catalog\Application\DTOs\SizeTierRow;
 use App\Modules\Catalog\Application\DTOs\TagRow;
 use App\Modules\Catalog\Application\DTOs\TrashedCatalogItem;
 use App\Modules\Catalog\Application\Queries\AdminCatalogQuery;
+use App\Modules\Catalog\Domain\Enums\ProductType;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Category as CategoryModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\KitchenStation as KitchenStationModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Product as ProductModel;
@@ -290,6 +291,36 @@ final class EloquentAdminCatalogQuery implements AdminCatalogQuery
         $tag = TagModel::query()->withCount('products')->find($id);
 
         return $tag === null ? null : $this->toTagRow($tag);
+    }
+
+    public function isCustomizableProduct(int $productId): bool
+    {
+        return $this->customizableProducts()->whereKey($productId)->exists();
+    }
+
+    public function customizableProductIds(int $categoryId): ?array
+    {
+        if (! CategoryModel::query()->whereKey($categoryId)->exists()) {
+            return null;
+        }
+
+        $categoryIds = CategoryModel::query()->whereKey($categoryId)->orWhere('parent_id', $categoryId)->pluck('id');
+
+        return array_values($this->customizableProducts()
+            ->whereIn('category_id', $categoryIds)
+            ->orderBy('sort')
+            ->orderBy('id')
+            ->pluck('id')
+            ->map(fn (mixed $id): int => (int) $id)
+            ->all());
+    }
+
+    /**
+     * @return Builder<ProductModel>
+     */
+    private function customizableProducts(): Builder
+    {
+        return ProductModel::query()->where('type', '!=', ProductType::Combo->value);
     }
 
     /**

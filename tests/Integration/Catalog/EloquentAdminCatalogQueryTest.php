@@ -246,3 +246,29 @@ it('gives a product for the edit form with variants, images and tags in order', 
         ->and($detail->tagIds)->toBe([$veg->id, $gone->id])
         ->and($this->query->product(424242))->toBeNull();
 });
+
+it('lists the products of a category and its sub-categories that may have options', function (): void {
+    $drinks = CategoryModel::factory()->create();
+    $coffee = CategoryModel::factory()->childOf($drinks)->create();
+    $water = ProductModel::factory()->for($drinks)->create(['sort' => 20]);
+    $latte = ProductModel::factory()->for($coffee)->unpublished()->create(['sort' => 10]);
+    ProductModel::factory()->for($drinks)->combo()->create();
+    ProductModel::factory()->for($drinks)->create()->delete();
+    ProductModel::factory()->create();
+
+    expect($this->query->customizableProductIds($drinks->id))->toBe([$latte->id, $water->id])
+        ->and($this->query->customizableProductIds($coffee->id))->toBe([$latte->id])
+        ->and($this->query->customizableProductIds(424242))->toBeNull();
+});
+
+it('knows which products may have options', function (): void {
+    $product = ProductModel::factory()->create();
+    $combo = ProductModel::factory()->combo()->create();
+    $deleted = ProductModel::factory()->create();
+    $deleted->delete();
+
+    expect($this->query->isCustomizableProduct($product->id))->toBeTrue()
+        ->and($this->query->isCustomizableProduct($combo->id))->toBeFalse()
+        ->and($this->query->isCustomizableProduct($deleted->id))->toBeFalse()
+        ->and($this->query->isCustomizableProduct(424242))->toBeFalse();
+});

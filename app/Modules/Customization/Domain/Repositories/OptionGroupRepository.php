@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Customization\Domain\Repositories;
 
 use App\Modules\Customization\Domain\Entities\OptionGroup;
+use App\Modules\Shared\Domain\ValueObjects\SortOrder;
 
 /**
  * The saved option groups. A group is always loaded and saved as a whole: with its options and their prices.
@@ -32,4 +33,7 @@ interface OptionGroupRepository
     public function delete(int $id): void;
 
     public function restore(int $id): void;
+
+    /** The position after the last group that is not deleted: 10 for the first one, then +10. */
+    public function nextSortOrder(): SortOrder;
 }

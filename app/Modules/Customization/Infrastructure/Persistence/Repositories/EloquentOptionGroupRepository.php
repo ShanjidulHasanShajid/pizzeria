@@ -10,6 +10,7 @@ use App\Modules\Customization\Domain\Repositories\OptionGroupRepository;
 use App\Modules\Customization\Infrastructure\Persistence\Mappers\OptionGroupMapper;
 use App\Modules\Customization\Infrastructure\Persistence\Models\Option as OptionModel;
 use App\Modules\Customization\Infrastructure\Persistence\Models\OptionGroup as OptionGroupModel;
+use App\Modules\Shared\Domain\ValueObjects\SortOrder;
 use Illuminate\Support\Facades\DB;
 
 final class EloquentOptionGroupRepository implements OptionGroupRepository
@@ -65,6 +66,14 @@ final class EloquentOptionGroupRepository implements OptionGroupRepository
     public function restore(int $id): void
     {
         OptionGroupModel::onlyTrashed()->findOrFail($id)->restore();
+    }
+
+    public function nextSortOrder(): SortOrder
+    {
+        // max() skips rows in the Trash (SoftDeletes) and gives null for an empty table.
+        $highest = OptionGroupModel::query()->max('sort');
+
+        return $highest === null ? SortOrder::first() : SortOrder::fromInt((int) $highest)->next();
     }
 
     /**

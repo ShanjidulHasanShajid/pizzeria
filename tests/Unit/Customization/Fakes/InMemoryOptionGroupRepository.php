@@ -8,6 +8,8 @@ use App\Modules\Customization\Domain\Entities\Option;
 use App\Modules\Customization\Domain\Entities\OptionGroup;
 use App\Modules\Customization\Domain\Repositories\OptionGroupRepository;
 use App\Modules\Shared\Domain\Exceptions\EntityNotFound;
+use App\Modules\Shared\Domain\ValueObjects\SortOrder;
+use RuntimeException;
 
 /**
  * An OptionGroupRepository in an array, for use case tests. Copies in, copies out,
@@ -24,6 +26,8 @@ final class InMemoryOptionGroupRepository implements OptionGroupRepository
     private int $nextGroupId = 1;
 
     private int $nextOptionId = 1;
+
+    private bool $failNextSave = false;
 
     public function find(int $id): ?OptionGroup
     {
@@ -53,6 +57,12 @@ final class InMemoryOptionGroupRepository implements OptionGroupRepository
 
     public function save(OptionGroup $group): int
     {
+        if ($this->failNextSave) {
+            $this->failNextSave = false;
+
+            throw new RuntimeException('The database is down.');
+        }
+
         $id = $group->id() ?? $this->nextGroupId;
         $this->nextGroupId = max($this->nextGroupId, $id + 1);
         $this->groups[$id] = $this->copy($group, $id);
@@ -76,6 +86,26 @@ final class InMemoryOptionGroupRepository implements OptionGroupRepository
         }
 
         unset($this->deleted[$id]);
+    }
+
+    public function nextSortOrder(): SortOrder
+    {
+        $highest = null;
+
+        foreach ($this->groups as $id => $group) {
+            if (! isset($this->deleted[$id]) && ($highest === null || $highest->isBefore($group->sort()))) {
+                $highest = $group->sort();
+            }
+        }
+
+        return $highest === null ? SortOrder::first() : $highest->next();
+    }
+
+    // Test helper (not part of the interface)
+
+    public function failNextSave(): void
+    {
+        $this->failNextSave = true;
     }
 
     private function copy(OptionGroup $group, int $id): OptionGroup
