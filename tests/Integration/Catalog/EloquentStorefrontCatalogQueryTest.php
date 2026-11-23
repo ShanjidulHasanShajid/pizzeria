@@ -6,6 +6,7 @@ use App\Modules\Catalog\Application\DTOs\CategoryNode;
 use App\Modules\Catalog\Application\DTOs\ProductCard;
 use App\Modules\Catalog\Application\DTOs\ProductImageView;
 use App\Modules\Catalog\Application\DTOs\TagBadge;
+use App\Modules\Catalog\Application\DTOs\VariantPricingFacts;
 use App\Modules\Catalog\Application\DTOs\VariantView;
 use App\Modules\Catalog\Application\Queries\StorefrontCatalogQuery;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Category as CategoryModel;
@@ -249,4 +250,37 @@ it('needs the same number of queries for 1 card as for 10 (no N+1)', function ()
 
     expect(count($this->query->productCardsForCategory($this->pizza->id)))->toBe(10)
         ->and($forTen)->toBe($forOne);
+});
+
+describe('pricing facts for other modules', function (): void {
+    it('gives the name, the switches and the variants in sort order, without deleted variants', function (): void {
+        $product = shopProduct($this->pizza, ['Personal' => [45_000, true], 'Large' => [125_000, false], 'Old' => [90_000, true]], ['name' => 'Margherita']);
+        $product->variants()->where('label', 'Old')->firstOrFail()->delete();
+
+        $facts = $this->query->pricingFacts($product->id);
+
+        expect($facts->productId)->toBe($product->id)
+            ->and($facts->name)->toBe('Margherita')
+            ->and($facts->isVisible)->toBeTrue()
+            ->and($facts->isAvailable)->toBeTrue()
+            ->and(array_map(fn (VariantPricingFacts $variant): string => $variant->label, $facts->variants))->toBe(['Personal', 'Large'])
+            ->and($facts->variants[0]->price->poisha())->toBe(45_000)
+            ->and($facts->variants[1]->isAvailable)->toBeFalse();
+    });
+
+    it('says that a hidden product, or one in an inactive category, is not visible', function (): void {
+        $hidden = shopProduct($this->pizza, attributes: ['is_published' => false]);
+        $inactive = shopProduct(CategoryModel::factory()->inactive()->create());
+
+        expect($this->query->pricingFacts($hidden->id)->isVisible)->toBeFalse()
+            ->and($this->query->pricingFacts($inactive->id)->isVisible)->toBeFalse();
+    });
+
+    it('returns null for an unknown or deleted product', function (): void {
+        $deleted = shopProduct($this->pizza);
+        $deleted->delete();
+
+        expect($this->query->pricingFacts($deleted->id))->toBeNull()
+            ->and($this->query->pricingFacts(424242))->toBeNull();
+    });
 });
