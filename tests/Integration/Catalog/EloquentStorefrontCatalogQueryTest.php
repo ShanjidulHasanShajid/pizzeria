@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Catalog\Application\DTOs\CategoryNode;
+use App\Modules\Catalog\Application\DTOs\CategorySectionRequest;
 use App\Modules\Catalog\Application\DTOs\ProductCard;
 use App\Modules\Catalog\Application\DTOs\ProductImageView;
 use App\Modules\Catalog\Application\DTOs\TagBadge;
@@ -282,5 +283,64 @@ describe('pricing facts for other modules', function (): void {
 
         expect($this->query->pricingFacts($deleted->id))->toBeNull()
             ->and($this->query->pricingFacts(424242))->toBeNull();
+    });
+});
+
+describe('sections for the home page', function (): void {
+    it('gives picked products first and fills up in sort order', function (): void {
+        $a = shopProduct($this->pizza, attributes: ['sort' => 10]);
+        shopProduct($this->pizza, attributes: ['sort' => 20]);
+        $c = shopProduct($this->pizza, attributes: ['sort' => 30]);
+
+        [$section] = $this->query->categorySections([new CategorySectionRequest($this->pizza->id, 2, [$c->id])]);
+
+        expect($section->name)->toBe('Pizza')
+            ->and($section->slug)->toBe('pizza')
+            ->and(cardIds($section->products))->toBe([$c->id, $a->id]);
+    });
+
+    it('keeps the order of the requests, includes sub-categories and takes the same category twice', function (): void {
+        $drinks = CategoryModel::factory()->create(['sort' => 20]);
+        $coffee = CategoryModel::factory()->childOf($drinks)->create();
+        $latte = shopProduct($coffee);
+        $margherita = shopProduct($this->pizza);
+
+        $sections = $this->query->categorySections([
+            new CategorySectionRequest($drinks->id, 4),
+            new CategorySectionRequest($this->pizza->id, 4),
+            new CategorySectionRequest($coffee->id, 1),
+            new CategorySectionRequest($drinks->id, 3),
+        ]);
+
+        expect(array_map(fn ($section): array => cardIds($section->products), $sections))
+            ->toBe([[$latte->id], [$margherita->id], [$latte->id], [$latte->id]]);
+    });
+
+    it('never shows hidden products, also when they were picked, nor products of another category', function (): void {
+        $other = shopProduct(CategoryModel::factory()->create());
+        $hidden = shopProduct($this->pizza, attributes: ['is_published' => false]);
+        $deleted = shopProduct($this->pizza);
+        $deleted->delete();
+        $visible = shopProduct($this->pizza);
+
+        [$section] = $this->query->categorySections([new CategorySectionRequest($this->pizza->id, 4, [$hidden->id, $other->id, $deleted->id, 424242])]);
+
+        expect(cardIds($section->products))->toBe([$visible->id]);
+    });
+
+    it('gives null for a hidden, deleted or unknown category and an empty list for an empty one', function (): void {
+        $inactive = CategoryModel::factory()->inactive()->create();
+        $child = CategoryModel::factory()->childOf($inactive)->create();
+        $deleted = CategoryModel::factory()->create();
+        $deleted->delete();
+
+        $sections = $this->query->categorySections(array_map(
+            fn (int $id): CategorySectionRequest => new CategorySectionRequest($id, 4),
+            [$inactive->id, $child->id, $deleted->id, 424242, $this->pizza->id],
+        ));
+
+        expect(array_slice($sections, 0, 4))->toBe([null, null, null, null])
+            ->and($sections[4]->products)->toBe([])
+            ->and($this->query->categorySections([]))->toBe([]);
     });
 });
