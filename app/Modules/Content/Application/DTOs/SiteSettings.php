@@ -31,5 +31,6 @@ final readonly class SiteSettings
         public string $combosStripTitle,
         public string $openingHoursText,
         public string $deliveryNotice,
+        public string $aboutText,
     ) {}
 }

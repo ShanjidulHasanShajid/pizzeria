@@ -13,6 +13,7 @@ enum SettingKey: string
     case SiteName = 'site_name';
     case Logo = 'logo';
     case Favicon = 'favicon';
+    case AboutText = 'about_text';
 
     case Phone = 'phone';
     case Email = 'email';
@@ -37,7 +38,7 @@ enum SettingKey: string
     public function group(): SettingGroup
     {
         return match ($this) {
-            self::SiteName, self::Logo, self::Favicon => SettingGroup::General,
+            self::SiteName, self::Logo, self::Favicon, self::AboutText => SettingGroup::General,
             self::Phone, self::Email, self::AddressLine => SettingGroup::Contact,
             self::FacebookUrl, self::InstagramUrl, self::YoutubeUrl => SettingGroup::Social,
             self::VatPercentage, self::PricesIncludeVat, self::StoreOpen => SettingGroup::Commerce,
@@ -57,7 +58,7 @@ enum SettingKey: string
             self::VatPercentage => SettingType::Percentage,
             self::PricesIncludeVat, self::StoreOpen => SettingType::Boolean,
             self::HotItemsLimit => SettingType::Integer,
-            self::BuilderText => SettingType::LongText,
+            self::BuilderText, self::AboutText => SettingType::LongText,
             self::SiteName, self::AddressLine, self::BuilderTitle,
             self::CombosStripTitle, self::OpeningHoursText, self::DeliveryNotice => SettingType::Text,
         };
@@ -75,6 +76,7 @@ enum SettingKey: string
             self::BuilderTitle => 'Build your own pizza',
             self::BuilderText => 'Choose the size, crust, sauce and toppings, and see the price as you go.',
             self::CombosStripTitle => 'Meal deals',
+            self::AboutText => 'Hand-stretched pizza, fresh pasta and warm desserts, made to order in Dhaka and delivered hot to your door.',
             default => '',
         };
     }

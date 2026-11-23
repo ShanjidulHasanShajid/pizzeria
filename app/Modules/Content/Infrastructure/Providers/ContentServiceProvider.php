@@ -7,9 +7,11 @@ namespace App\Modules\Content\Infrastructure\Providers;
 use App\Modules\Content\Application\Ports\HomeCatalog;
 use App\Modules\Content\Application\Queries\BranchScheduleQuery;
 use App\Modules\Content\Application\Queries\ContentQuery;
+use App\Modules\Content\Application\Queries\HomePageQuery;
 use App\Modules\Content\Application\Queries\LocationQuery;
 use App\Modules\Content\Application\Queries\NavigationQuery;
 use App\Modules\Content\Application\Queries\SettingsQuery;
+use App\Modules\Content\Application\Queries\SiteLayoutQuery;
 use App\Modules\Content\Domain\Repositories\ContentItemRepository;
 use App\Modules\Content\Domain\Repositories\HomeLayoutRepository;
 use App\Modules\Content\Domain\Repositories\LocationRepository;
@@ -26,6 +28,8 @@ use App\Modules\Content\Infrastructure\Persistence\Repositories\EloquentHomeLayo
 use App\Modules\Content\Infrastructure\Persistence\Repositories\EloquentLocationRepository;
 use App\Modules\Content\Infrastructure\Persistence\Repositories\EloquentNavItemRepository;
 use App\Modules\Content\Infrastructure\Persistence\Repositories\EloquentSettingsRepository;
+use App\Modules\Content\Infrastructure\Queries\CatalogHomePageQuery;
+use App\Modules\Content\Infrastructure\Queries\CatalogSiteLayoutQuery;
 use App\Modules\Content\Infrastructure\Queries\RepositoryBranchScheduleQuery;
 use App\Modules\Content\Infrastructure\Queries\RepositoryContentQuery;
 use App\Modules\Content\Infrastructure\Queries\RepositoryLocationQuery;
@@ -53,6 +57,8 @@ final class ContentServiceProvider extends ModuleServiceProvider
         LocationRepository::class => CachedLocationRepository::class,
         LocationQuery::class => RepositoryLocationQuery::class,
         BranchScheduleQuery::class => RepositoryBranchScheduleQuery::class,
+        SiteLayoutQuery::class => CatalogSiteLayoutQuery::class,
+        HomePageQuery::class => CatalogHomePageQuery::class,
     ];
 
     public function register(): void

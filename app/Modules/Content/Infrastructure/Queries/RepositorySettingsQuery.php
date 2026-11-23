@@ -44,6 +44,7 @@ final class RepositorySettingsQuery implements SettingsQuery
             combosStripTitle: $value(SettingKey::CombosStripTitle),
             openingHoursText: $value(SettingKey::OpeningHoursText),
             deliveryNotice: $value(SettingKey::DeliveryNotice),
+            aboutText: $value(SettingKey::AboutText),
         );
     }
 
