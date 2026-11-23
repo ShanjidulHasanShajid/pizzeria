@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Modules\Catalog\Infrastructure\Database\Seeders\CatalogDevelopmentSeeder;
+use App\Modules\Customization\Infrastructure\Database\Seeders\CustomizationDevelopmentSeeder;
 use App\Modules\Identity\Infrastructure\Database\Seeders\IdentityDevelopmentSeeder;
 use Illuminate\Database\Seeder;
 
@@ -20,7 +21,8 @@ class DevelopmentSeeder extends Seeder
             ProductionSeeder::class,   // already creates the super admin
             IdentityDevelopmentSeeder::class,
             CatalogDevelopmentSeeder::class,
-            // Phase 7 and later: more module development seeders (sample orders ...).
+            CustomizationDevelopmentSeeder::class, // after the catalog: it attaches groups to products
+            // Phase 9 and later: more module development seeders (sample orders ...).
         ]);
     }
 }
