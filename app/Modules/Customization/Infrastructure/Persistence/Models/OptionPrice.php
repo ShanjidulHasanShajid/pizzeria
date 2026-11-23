@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Customization\Infrastructure\Persistence\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * A row of option_prices: what an option costs at one size, in poisha.
@@ -38,5 +39,13 @@ class OptionPrice extends Model
             'size_tier_id' => 'integer',
             'price' => 'integer',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Option, $this>
+     */
+    public function option(): BelongsTo
+    {
+        return $this->belongsTo(Option::class);
     }
 }

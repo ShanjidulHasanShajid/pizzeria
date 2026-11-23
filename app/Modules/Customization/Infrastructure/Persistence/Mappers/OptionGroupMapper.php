@@ -66,7 +66,10 @@ final class OptionGroupMapper
         ];
     }
 
-    private function toOption(OptionModel $model): Option
+    /**
+     * The model must come with prices loaded.
+     */
+    public function toOption(OptionModel $model): Option
     {
         $sizePrices = [];
 

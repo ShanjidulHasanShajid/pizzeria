@@ -25,4 +25,15 @@ final class InMemoryCustomizableProducts implements CustomizableProducts
     {
         return $this->byCategory[$categoryId] ?? null;
     }
+
+    public function categoryNames(): array
+    {
+        $names = [];
+
+        foreach (array_keys($this->byCategory) as $id) {
+            $names[$id] = "Category {$id}";
+        }
+
+        return $names;
+    }
 }

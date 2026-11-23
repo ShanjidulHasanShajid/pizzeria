@@ -20,4 +20,15 @@ final class CatalogCustomizableProducts implements CustomizableProducts
     {
         return $this->catalog->customizableProductIds($categoryId);
     }
+
+    public function categoryNames(): array
+    {
+        $names = [];
+
+        foreach ($this->catalog->categoryTable() as $row) {
+            $names[$row->id] = $row->parentName === null ? $row->name : "{$row->parentName} > {$row->name}";
+        }
+
+        return $names;
+    }
 }

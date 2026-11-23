@@ -17,4 +17,9 @@ interface CustomizableProducts
      * @return list<int>|null null when there is no such category
      */
     public function idsInCategory(int $categoryId): ?array;
+
+    /**
+     * @return array<int, string> category id => name; a sub-category reads "Drinks > Coffee"
+     */
+    public function categoryNames(): array;
 }

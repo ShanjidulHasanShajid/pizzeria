@@ -189,6 +189,12 @@ final class OptionGroup extends AggregateRoot
         return null;
     }
 
+    /** Names are compared without case and outer spaces. */
+    public function hasOptionNamed(string $name): bool
+    {
+        return $this->findByName($name) !== null;
+    }
+
     /**
      * @return list<Option> in sort order
      */

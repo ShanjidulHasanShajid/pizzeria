@@ -7,12 +7,12 @@ namespace App\Modules\Catalog\Application\DTOs;
 use DateTimeImmutable;
 
 /**
- * One deleted catalog record on the Trash screen.
+ * One deleted record on the Trash screen.
  */
 final readonly class TrashedCatalogItem
 {
     /**
-     * @param  'kitchen_station'|'size_tier'|'tag'|'category'|'product'  $kind
+     * @param  'kitchen_station'|'size_tier'|'tag'|'category'|'product'|'option_group'|'option'  $kind
      */
     public function __construct(
         public string $kind,

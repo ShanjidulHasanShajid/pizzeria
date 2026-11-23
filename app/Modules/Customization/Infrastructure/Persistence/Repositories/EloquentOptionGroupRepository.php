@@ -76,6 +76,51 @@ final class EloquentOptionGroupRepository implements OptionGroupRepository
         return $highest === null ? SortOrder::first() : SortOrder::fromInt((int) $highest)->next();
     }
 
+    public function findTrashed(int $id): ?OptionGroup
+    {
+        $model = OptionGroupModel::onlyTrashed()->with('options.prices')->find($id);
+
+        return $model === null ? null : $this->mapper->toEntity($model);
+    }
+
+    public function forceDelete(int $id): void
+    {
+        // options and option_prices have cascadeOnDelete: the database removes them too.
+        OptionGroupModel::onlyTrashed()->findOrFail($id)->forceDelete();
+    }
+
+    public function imagePaths(int $id): array
+    {
+        return array_values(OptionModel::withTrashed()
+            ->where('option_group_id', $id)
+            ->whereNotNull('image_path')
+            ->pluck('image_path')
+            ->map(fn (mixed $path): string => (string) $path)
+            ->all());
+    }
+
+    public function findTrashedOption(int $optionId): ?Option
+    {
+        $model = OptionModel::onlyTrashed()->with('prices')->find($optionId);
+
+        return $model === null ? null : $this->mapper->toOption($model);
+    }
+
+    public function groupIdOfTrashedOption(int $optionId): ?int
+    {
+        return OptionModel::onlyTrashed()->find($optionId)?->option_group_id;
+    }
+
+    public function restoreOption(int $optionId): void
+    {
+        OptionModel::onlyTrashed()->findOrFail($optionId)->restore();
+    }
+
+    public function forceDeleteOption(int $optionId): void
+    {
+        OptionModel::onlyTrashed()->findOrFail($optionId)->forceDelete();
+    }
+
     /**
      * Inserts new options, updates known ones, and soft-deletes the rows of options
      * the aggregate no longer has.

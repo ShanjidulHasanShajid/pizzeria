@@ -6,13 +6,16 @@ namespace App\Modules\Customization\Infrastructure\Queries;
 
 use App\Modules\Customization\Application\DTOs\AdminOptionGroupDetail;
 use App\Modules\Customization\Application\DTOs\AdminOptionRow;
+use App\Modules\Customization\Application\DTOs\AttachedGroupRow;
 use App\Modules\Customization\Application\DTOs\OptionGroupRow;
 use App\Modules\Customization\Application\Queries\AdminOptionQuery;
 use App\Modules\Customization\Domain\Enums\PriceMode;
 use App\Modules\Customization\Infrastructure\Persistence\Models\Option as OptionModel;
 use App\Modules\Customization\Infrastructure\Persistence\Models\OptionGroup as OptionGroupModel;
+use App\Modules\Customization\Infrastructure\Persistence\Models\ProductOptionGroup as ProductOptionGroupModel;
 use App\Modules\Shared\Domain\ValueObjects\Money;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 final class EloquentAdminOptionQuery implements AdminOptionQuery
 {
@@ -43,10 +46,41 @@ final class EloquentAdminOptionQuery implements AdminOptionQuery
     {
         $group = OptionGroupModel::query()->with('options.prices')->find($id);
 
-        if ($group === null) {
-            return null;
-        }
+        return $group === null ? null : $this->toDetail($group);
+    }
 
+    public function groups(): array
+    {
+        $groups = OptionGroupModel::query()->with('options.prices')->orderBy('sort')->orderBy('id')->get();
+
+        return array_values($groups->map(fn (OptionGroupModel $group): AdminOptionGroupDetail => $this->toDetail($group))->all());
+    }
+
+    public function attachedGroups(int $productId): array
+    {
+        $attachments = ProductOptionGroupModel::query()
+            ->where('product_id', $productId)
+            ->whereHas('optionGroup')
+            ->with(['optionGroup' => fn (Relation $group) => $group->withCount('options')])
+            ->orderBy('sort')
+            ->orderBy('id')
+            ->get();
+
+        return array_values($attachments->map(fn (ProductOptionGroupModel $attachment): AttachedGroupRow => new AttachedGroupRow(
+            attachmentId: $attachment->id,
+            optionGroupId: $attachment->option_group_id,
+            groupName: $attachment->optionGroup->name,
+            isGroupActive: $attachment->optionGroup->is_active,
+            optionCount: (int) $attachment->optionGroup->options_count,
+            isRequired: $attachment->is_required,
+            minimum: $attachment->min_select,
+            maximum: $attachment->max_select,
+            freeCount: $attachment->free_count,
+        ))->all());
+    }
+
+    private function toDetail(OptionGroupModel $group): AdminOptionGroupDetail
+    {
         return new AdminOptionGroupDetail(
             id: $group->id,
             name: $group->name,

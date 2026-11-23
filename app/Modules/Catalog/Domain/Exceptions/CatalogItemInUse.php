@@ -22,6 +22,16 @@ final class CatalogItemInUse extends DomainException
         return new self("\"{$name}\" is used by product variants. Remove it from those variants first.");
     }
 
+    public static function sizeTierInOptionPrices(string $name): self
+    {
+        return new self("\"{$name}\" is used by option prices. Empty its column in the price matrix of every option group first.");
+    }
+
+    public static function sizeTierStillInOptionPrices(string $name): self
+    {
+        return new self("\"{$name}\" cannot be deleted forever: option prices still use it, also of deleted or flat-priced options. Delete those options forever first, or keep the size in the Trash.");
+    }
+
     public static function categoryWithProducts(string $name): self
     {
         return new self("\"{$name}\" still has products. Move them to another category or delete them first.");

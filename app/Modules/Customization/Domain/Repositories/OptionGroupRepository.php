@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Customization\Domain\Repositories;
 
+use App\Modules\Customization\Domain\Entities\Option;
 use App\Modules\Customization\Domain\Entities\OptionGroup;
 use App\Modules\Shared\Domain\ValueObjects\SortOrder;
 
@@ -36,4 +37,28 @@ interface OptionGroupRepository
 
     /** The position after the last group that is not deleted: 10 for the first one, then +10. */
     public function nextSortOrder(): SortOrder;
+
+    /** A group that is in the Trash, or null. */
+    public function findTrashed(int $id): ?OptionGroup;
+
+    /** Deletes a group that is in the Trash for good, with all its options and prices. */
+    public function forceDelete(int $id): void;
+
+    /**
+     * The image paths of all options of a group, also of options in the Trash.
+     *
+     * @return list<string>
+     */
+    public function imagePaths(int $id): array;
+
+    /** A single option that is in the Trash, or null. */
+    public function findTrashedOption(int $optionId): ?Option;
+
+    /** The group of an option that is in the Trash, or null. The group may be in the Trash too. */
+    public function groupIdOfTrashedOption(int $optionId): ?int;
+
+    public function restoreOption(int $optionId): void;
+
+    /** Deletes an option that is in the Trash for good, with its prices. */
+    public function forceDeleteOption(int $optionId): void;
 }
