@@ -186,7 +186,8 @@ it('says so when the item sells out or leaves the menu while the page is open', 
 });
 
 it('cannot put anything into a cart yet', function (): void {
-    expect(($this->withCrust)()->html())->toMatch('#<button[^>]*disabled[^>]*>\s*Add to cart#');
+    // Livewire writes comments (<!--[if BLOCK]> ...) between the tag and the text.
+    expect(($this->withCrust)()->html())->toMatch('#<button[^>]* disabled="disabled"[^>]*>(?:\s|<!--.*?-->)*Add to cart#');
 });
 
 it('gives the configuration of visible products only', function (): void {
