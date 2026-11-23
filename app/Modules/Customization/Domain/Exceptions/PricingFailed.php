@@ -9,11 +9,15 @@ use App\Modules\Shared\Domain\Exceptions\DomainException;
 
 /**
  * The pricing engine refused a line. $reason says why (for code), the message says it for people.
+ * $optionGroupId is the group that broke a rule, or null when the product or size is the reason.
  */
 final class PricingFailed extends DomainException
 {
-    private function __construct(public readonly PricingFailureReason $reason, string $message)
-    {
+    private function __construct(
+        public readonly PricingFailureReason $reason,
+        string $message,
+        public readonly ?int $optionGroupId = null,
+    ) {
         parent::__construct($message);
     }
 
@@ -47,33 +51,33 @@ final class PricingFailed extends DomainException
         return new self(PricingFailureReason::GroupNotOffered, 'Some of the chosen extras are not offered for this item.');
     }
 
-    public static function missingRequiredGroup(string $group): self
+    public static function missingRequiredGroup(string $group, ?int $optionGroupId = null): self
     {
-        return new self(PricingFailureReason::MissingRequiredGroup, "Please choose: {$group}.");
+        return new self(PricingFailureReason::MissingRequiredGroup, "Please choose: {$group}.", $optionGroupId);
     }
 
-    public static function tooFewChoices(string $group, int $minimum): self
+    public static function tooFewChoices(string $group, int $minimum, ?int $optionGroupId = null): self
     {
-        return new self(PricingFailureReason::TooFewChoices, "{$group}: choose at least {$minimum}.");
+        return new self(PricingFailureReason::TooFewChoices, "{$group}: choose at least {$minimum}.", $optionGroupId);
     }
 
-    public static function tooManyChoices(string $group, int $maximum): self
+    public static function tooManyChoices(string $group, int $maximum, ?int $optionGroupId = null): self
     {
-        return new self(PricingFailureReason::TooManyChoices, "{$group}: choose at most {$maximum}.");
+        return new self(PricingFailureReason::TooManyChoices, "{$group}: choose at most {$maximum}.", $optionGroupId);
     }
 
-    public static function optionNotInGroup(string $group): self
+    public static function optionNotInGroup(string $group, ?int $optionGroupId = null): self
     {
-        return new self(PricingFailureReason::OptionNotInGroup, "{$group}: one of the choices is not offered here.");
+        return new self(PricingFailureReason::OptionNotInGroup, "{$group}: one of the choices is not offered here.", $optionGroupId);
     }
 
-    public static function optionSoldOut(string $option): self
+    public static function optionSoldOut(string $option, ?int $optionGroupId = null): self
     {
-        return new self(PricingFailureReason::OptionSoldOut, "\"{$option}\" is sold out right now.");
+        return new self(PricingFailureReason::OptionSoldOut, "\"{$option}\" is sold out right now.", $optionGroupId);
     }
 
-    public static function optionNotOfferedForSize(string $option, string $variant): self
+    public static function optionNotOfferedForSize(string $option, string $variant, ?int $optionGroupId = null): self
     {
-        return new self(PricingFailureReason::OptionNotOfferedForSize, "\"{$option}\" is not offered for {$variant}.");
+        return new self(PricingFailureReason::OptionNotOfferedForSize, "\"{$option}\" is not offered for {$variant}.", $optionGroupId);
     }
 }

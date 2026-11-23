@@ -25,4 +25,10 @@ final readonly class OptionView
         public ?Money $flatPrice,
         public array $sizePrices,
     ) {}
+
+    /** The price at this size, or null when the option is not offered at it. */
+    public function priceFor(?int $sizeTierId): ?Money
+    {
+        return $this->flatPrice ?? ($sizeTierId === null ? null : ($this->sizePrices[$sizeTierId] ?? null));
+    }
 }
