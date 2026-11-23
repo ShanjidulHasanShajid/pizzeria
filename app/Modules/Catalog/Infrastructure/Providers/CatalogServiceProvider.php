@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Infrastructure\Providers;
 
+use App\Modules\Catalog\Application\Ports\ProductOptions;
 use App\Modules\Catalog\Application\Ports\SizeTierPrices;
 use App\Modules\Catalog\Application\Queries\AdminCatalogQuery;
+use App\Modules\Catalog\Application\Queries\MenuQuery;
 use App\Modules\Catalog\Application\Queries\StorefrontCatalogQuery;
 use App\Modules\Catalog\Domain\Repositories\CategoryRepository;
 use App\Modules\Catalog\Domain\Repositories\KitchenStationRepository;
 use App\Modules\Catalog\Domain\Repositories\ProductRepository;
 use App\Modules\Catalog\Domain\Repositories\SizeTierRepository;
 use App\Modules\Catalog\Domain\Repositories\TagRepository;
+use App\Modules\Catalog\Infrastructure\Adapters\CustomizationProductOptions;
 use App\Modules\Catalog\Infrastructure\Adapters\CustomizationSizeTierPrices;
 use App\Modules\Catalog\Infrastructure\Persistence\Repositories\EloquentCategoryRepository;
 use App\Modules\Catalog\Infrastructure\Persistence\Repositories\EloquentKitchenStationRepository;
@@ -19,6 +22,7 @@ use App\Modules\Catalog\Infrastructure\Persistence\Repositories\EloquentProductR
 use App\Modules\Catalog\Infrastructure\Persistence\Repositories\EloquentSizeTierRepository;
 use App\Modules\Catalog\Infrastructure\Persistence\Repositories\EloquentTagRepository;
 use App\Modules\Catalog\Infrastructure\Queries\EloquentAdminCatalogQuery;
+use App\Modules\Catalog\Infrastructure\Queries\EloquentMenuQuery;
 use App\Modules\Catalog\Infrastructure\Queries\EloquentStorefrontCatalogQuery;
 use App\Modules\Shared\Infrastructure\Providers\ModuleServiceProvider;
 
@@ -38,7 +42,9 @@ final class CatalogServiceProvider extends ModuleServiceProvider
         ProductRepository::class => EloquentProductRepository::class,
         StorefrontCatalogQuery::class => EloquentStorefrontCatalogQuery::class,
         AdminCatalogQuery::class => EloquentAdminCatalogQuery::class,
+        MenuQuery::class => EloquentMenuQuery::class,
         SizeTierPrices::class => CustomizationSizeTierPrices::class,
+        ProductOptions::class => CustomizationProductOptions::class,
     ];
 
     protected function moduleName(): string

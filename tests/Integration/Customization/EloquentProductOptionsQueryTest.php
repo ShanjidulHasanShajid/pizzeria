@@ -114,3 +114,14 @@ it('needs the same number of queries for one group as for five', function (): vo
     expect($this->query->forProduct($this->product->id))->toHaveCount(5)
         ->and($forFive)->toBe($forOne);
 });
+
+it('knows which of many products have an active group', function (): void {
+    $with = ProductModel::factory()->create();
+    $without = ProductModel::factory()->create();
+    $group = app(OptionGroupRepository::class)->save(OptionGroup::create('Dips', 'Dips', SortOrder::first()));
+    app(ProductOptionGroupRepository::class)->save(ProductOptionGroup::attach($with->id, $group, SelectionRules::upTo(3), SortOrder::first()));
+
+    expect($this->query->productIdsWithOptions([$without->id, $with->id, 424242]))->toBe([$with->id])
+        ->and($this->query->productIdsWithOptions([$without->id]))->toBe([])
+        ->and($this->query->productIdsWithOptions([]))->toBe([]);
+});
