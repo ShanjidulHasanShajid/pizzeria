@@ -17,4 +17,15 @@ final class FixedSizeTiers implements SizeTiers
     {
         return $this->ids;
     }
+
+    public function names(): array
+    {
+        $names = [];
+
+        foreach ($this->ids as $id) {
+            $names[$id] = "Size {$id}";
+        }
+
+        return $names;
+    }
 }

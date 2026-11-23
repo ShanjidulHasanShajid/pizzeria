@@ -13,4 +13,9 @@ interface SizeTiers
      * @return list<int> ids of the size tiers that are not deleted, in sort order
      */
     public function ids(): array;
+
+    /**
+     * @return array<int, string> id => name of the size tiers that are not deleted, in sort order
+     */
+    public function names(): array;
 }

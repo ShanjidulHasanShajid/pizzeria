@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Customization\Infrastructure\Adapters;
 
-use App\Modules\Catalog\Application\DTOs\SizeTierRow;
 use App\Modules\Catalog\Application\Queries\AdminCatalogQuery;
 use App\Modules\Customization\Application\Ports\SizeTiers;
 
@@ -14,6 +13,17 @@ final class CatalogSizeTiers implements SizeTiers
 
     public function ids(): array
     {
-        return array_map(fn (SizeTierRow $row): int => $row->id, $this->catalog->sizeTierTable());
+        return array_keys($this->names());
+    }
+
+    public function names(): array
+    {
+        $names = [];
+
+        foreach ($this->catalog->sizeTierTable() as $row) {
+            $names[$row->id] = $row->name;
+        }
+
+        return $names;
     }
 }

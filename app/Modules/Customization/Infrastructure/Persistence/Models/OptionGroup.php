@@ -23,6 +23,9 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  * @property-read Collection<int, Option> $options
+ * @property-read int|null $options_count only after withCount('options')
+ * @property-read int|null $sold_out_count only after withCount('options as sold_out_count')
+ * @property-read int|null $attachments_count only after withCount('attachments')
  */
 class OptionGroup extends Model
 {
@@ -56,5 +59,15 @@ class OptionGroup extends Model
     public function options(): HasMany
     {
         return $this->hasMany(Option::class);
+    }
+
+    /**
+     * Where this group is attached to products.
+     *
+     * @return HasMany<ProductOptionGroup, $this>
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(ProductOptionGroup::class);
     }
 }
