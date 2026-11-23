@@ -44,7 +44,7 @@
                                         @if ($group->children !== [])
                                             <ul x-show="sub" x-cloak x-collapse class="pl-3">
                                                 @foreach ($group->children as $child)
-                                                    <li><a href="{{ route('categories.show', $child->slug) }}" class="block py-1.5 text-sm text-muted">{{ $child->name }}</a></li>
+                                                    <li><a href="{{ route('categories.sub', [$group->slug, $child->slug]) }}" class="block py-1.5 text-sm text-muted">{{ $child->name }}</a></li>
                                                 @endforeach
                                             </ul>
                                         @endif

@@ -8,7 +8,7 @@
                 @if ($group->children !== [])
                     <ul class="mt-2 space-y-1">
                         @foreach ($group->children as $child)
-                            <li><a href="{{ route('categories.show', $child->slug) }}" class="text-sm text-muted hover:text-brand-700 hover:underline">{{ $child->name }}</a></li>
+                            <li><a href="{{ route('categories.sub', [$group->slug, $child->slug]) }}" class="text-sm text-muted hover:text-brand-700 hover:underline">{{ $child->name }}</a></li>
                         @endforeach
                     </ul>
                 @endif

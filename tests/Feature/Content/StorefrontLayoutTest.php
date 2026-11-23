@@ -93,6 +93,8 @@ it('shows the navbar as the admin arranged it', function (): void {
 });
 
 it('marks the menu as active on category pages', function (): void {
+    CategoryModel::factory()->create(['slug' => 'pizza']);
+
     expect(($this->navbar)('/menu/pizza'))->toMatch('#aria-current="page"[^>]*>Menu<#');
 });
 
