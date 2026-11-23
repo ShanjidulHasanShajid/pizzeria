@@ -9,7 +9,7 @@ use App\Modules\Catalog\Domain\Enums\ProductType;
 
 /**
  * Everything the product page shows (website plan 4.6).
- * Option groups are added by the Customization module in Phase 8.
+ * Option groups belong to the Customization module (ProductConfigurationQuery).
  */
 final readonly class ProductDetail
 {
@@ -38,4 +38,26 @@ final readonly class ProductDetail
         public array $images,
         public array $tags,
     ) {}
+
+    /**
+     * The size that is chosen when the page opens: the default one, or when that is sold out the
+     * first one that can be ordered. A visible product always has a size.
+     */
+    public function startVariant(): VariantView
+    {
+        $default = $this->variants[0];
+        $firstAvailable = null;
+
+        foreach ($this->variants as $variant) {
+            if ($variant->isDefault) {
+                $default = $variant;
+            }
+
+            if ($variant->isAvailable) {
+                $firstAvailable ??= $variant;
+            }
+        }
+
+        return $default->isAvailable ? $default : ($firstAvailable ?? $default);
+    }
 }
