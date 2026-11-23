@@ -7,9 +7,9 @@ use App\Modules\Identity\Domain\Enums\UserRole;
 
 $expected = [
     'customer' => [],
-    'staff' => [Ability::AccessAdmin, Ability::ManageOrders],
+    'staff' => [Ability::AccessAdmin, Ability::ManageOrders, Ability::ManageAvailability],
     'admin' => [
-        Ability::AccessAdmin, Ability::ManageOrders, Ability::AccessAdminSections, Ability::ManageCatalog,
+        Ability::AccessAdmin, Ability::ManageOrders, Ability::ManageAvailability, Ability::AccessAdminSections, Ability::ManageCatalog,
         Ability::ManageContent, Ability::ManageSales, Ability::ManageSettings, Ability::ManageCustomers,
     ],
     'super_admin' => Ability::cases(),

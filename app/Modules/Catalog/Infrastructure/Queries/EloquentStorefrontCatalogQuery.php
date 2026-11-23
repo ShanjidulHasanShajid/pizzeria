@@ -8,7 +8,9 @@ use App\Modules\Catalog\Application\DTOs\CategoryNode;
 use App\Modules\Catalog\Application\DTOs\ProductCard;
 use App\Modules\Catalog\Application\DTOs\ProductDetail;
 use App\Modules\Catalog\Application\DTOs\ProductImageView;
+use App\Modules\Catalog\Application\DTOs\ProductPricingFacts;
 use App\Modules\Catalog\Application\DTOs\TagBadge;
+use App\Modules\Catalog\Application\DTOs\VariantPricingFacts;
 use App\Modules\Catalog\Application\DTOs\VariantView;
 use App\Modules\Catalog\Application\Queries\StorefrontCatalogQuery;
 use App\Modules\Catalog\Domain\ValueObjects\LeadTime;
@@ -147,6 +149,29 @@ final class EloquentStorefrontCatalogQuery implements StorefrontCatalogQuery
                     ->orWhere('short_description', 'like', $like);
             }),
             $limit,
+        );
+    }
+
+    public function pricingFacts(int $productId): ?ProductPricingFacts
+    {
+        $product = ProductModel::query()->with('variants')->find($productId);
+
+        if ($product === null) {
+            return null;
+        }
+
+        return new ProductPricingFacts(
+            productId: $product->id,
+            name: $product->name,
+            isVisible: $this->visibleProducts()->whereKey($productId)->exists(),
+            isAvailable: $product->is_available,
+            variants: array_values($product->variants->sortBy('sort')->map(fn (ProductVariantModel $variant): VariantPricingFacts => new VariantPricingFacts(
+                id: $variant->id,
+                label: $variant->label,
+                price: Money::fromPoisha($variant->price),
+                sizeTierId: $variant->size_tier_id,
+                isAvailable: $variant->is_available,
+            ))->all()),
         );
     }
 

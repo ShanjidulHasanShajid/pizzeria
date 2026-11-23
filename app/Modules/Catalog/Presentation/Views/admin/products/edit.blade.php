@@ -15,6 +15,15 @@
         </div>
     </x-admin.form-section>
 
+    {{-- Options come from the Customization module. Combos use slots instead (Phase 15). --}}
+    @unless ($product->type->value === 'combo')
+        <x-admin.form-section title="Options" description="Crusts, toppings, dips and other choices for this product. Changes here are saved at once. Drag to change the order on the product page.">
+            <div class="sm:col-span-2">
+                <livewire:customization.admin.product-options :product-id="$product->id" />
+            </div>
+        </x-admin.form-section>
+    @endunless
+
     <form method="POST" action="{{ route('admin.products.update', $product->id) }}" novalidate>
         @csrf
         @method('PUT')

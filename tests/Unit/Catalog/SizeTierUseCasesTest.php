@@ -17,11 +17,13 @@ use App\Modules\Catalog\Domain\Exceptions\CatalogItemInUse;
 use App\Modules\Shared\Domain\Exceptions\EntityNotFound;
 use App\Modules\Shared\Domain\Exceptions\ValidationFailed;
 use App\Modules\Shared\Domain\Services\SlugGenerator;
+use Tests\Unit\Catalog\Fakes\InMemorySizeTierPrices;
 use Tests\Unit\Catalog\Fakes\InMemorySizeTierRepository;
 use Tests\Unit\Identity\PassThroughTransactionManager;
 
 beforeEach(function (): void {
     $this->sizeTiers = new InMemorySizeTierRepository;
+    $this->prices = new InMemorySizeTierPrices;
     $this->transactions = new PassThroughTransactionManager;
     $this->createSize = fn (string $name, ?string $slug = null): int => (new CreateSizeTier($this->sizeTiers, new SlugGenerator))
         ->handle(new CreateSizeTierInput($name, $slug));
@@ -38,7 +40,7 @@ describe('creating', function (): void {
 
     it('adds a number when the slug is taken, also by a size in the trash', function (): void {
         $first = ($this->createSize)('Medium');
-        (new DeleteSizeTier($this->sizeTiers, $this->transactions))->handle(new CatalogItemInput($first));
+        (new DeleteSizeTier($this->sizeTiers, $this->prices, $this->transactions))->handle(new CatalogItemInput($first));
 
         $second = ($this->createSize)('Medium');
 
@@ -95,14 +97,14 @@ describe('deleting and order', function (): void {
         $id = ($this->createSize)('Personal');
         $this->sizeTiers->markInUse($id);
 
-        expect(fn () => (new DeleteSizeTier($this->sizeTiers, $this->transactions))->handle(new CatalogItemInput($id)))
+        expect(fn () => (new DeleteSizeTier($this->sizeTiers, $this->prices, $this->transactions))->handle(new CatalogItemInput($id)))
             ->toThrow(CatalogItemInUse::class, 'used by product variants');
         expect($this->sizeTiers->isDeleted($id))->toBeFalse();
     });
 
     it('restores a size from the trash', function (): void {
         $id = ($this->createSize)('Personal');
-        (new DeleteSizeTier($this->sizeTiers, $this->transactions))->handle(new CatalogItemInput($id));
+        (new DeleteSizeTier($this->sizeTiers, $this->prices, $this->transactions))->handle(new CatalogItemInput($id));
 
         (new RestoreSizeTier($this->sizeTiers))->handle(new CatalogItemInput($id));
 
@@ -125,13 +127,13 @@ describe('deleting forever', function (): void {
         $id = ($this->createSize)('Mini');
         $this->sizeTiers->delete($id);
 
-        (new ForceDeleteSizeTier($this->sizeTiers))->handle(new CatalogItemInput($id));
+        (new ForceDeleteSizeTier($this->sizeTiers, $this->prices))->handle(new CatalogItemInput($id));
 
         expect($this->sizeTiers->exists($id))->toBeFalse();
     });
 
     it('deletes a size forever only from the trash, and not while old variants still use it', function (): void {
-        $forceDelete = new ForceDeleteSizeTier($this->sizeTiers);
+        $forceDelete = new ForceDeleteSizeTier($this->sizeTiers, $this->prices);
         $live = ($this->createSize)('Personal');
         $trashed = ($this->createSize)('Mini');
         $this->sizeTiers->markUsedInTrash($trashed);
@@ -140,5 +142,28 @@ describe('deleting forever', function (): void {
         expect(fn () => $forceDelete->handle(new CatalogItemInput($live)))->toThrow(EntityNotFound::class);
         expect(fn () => $forceDelete->handle(new CatalogItemInput($trashed)))->toThrow(CatalogItemInUse::class, 'deleted forever');
         expect($this->sizeTiers->exists($trashed))->toBeTrue();
+    });
+});
+
+describe('option prices (8.34)', function (): void {
+    it('refuses to delete a size that option prices use', function (): void {
+        $id = ($this->createSize)('Mini');
+        $this->prices->markUsed($id);
+
+        expect(fn () => (new DeleteSizeTier($this->sizeTiers, $this->prices, $this->transactions))->handle(new CatalogItemInput($id)))
+            ->toThrow(CatalogItemInUse::class, 'option prices');
+        expect($this->sizeTiers->isDeleted($id))->toBeFalse();
+    });
+
+    it('moves a size with leftover prices to the trash, but does not delete it forever', function (): void {
+        $id = ($this->createSize)('Mini');
+        $this->prices->markLeftover($id);
+
+        (new DeleteSizeTier($this->sizeTiers, $this->prices, $this->transactions))->handle(new CatalogItemInput($id));
+        expect($this->sizeTiers->isDeleted($id))->toBeTrue();
+
+        expect(fn () => (new ForceDeleteSizeTier($this->sizeTiers, $this->prices))->handle(new CatalogItemInput($id)))
+            ->toThrow(CatalogItemInUse::class, 'option prices');
+        expect($this->sizeTiers->exists($id))->toBeTrue();
     });
 });

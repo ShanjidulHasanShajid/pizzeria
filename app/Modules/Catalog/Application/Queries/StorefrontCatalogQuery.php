@@ -7,11 +7,12 @@ namespace App\Modules\Catalog\Application\Queries;
 use App\Modules\Catalog\Application\DTOs\CategoryNode;
 use App\Modules\Catalog\Application\DTOs\ProductCard;
 use App\Modules\Catalog\Application\DTOs\ProductDetail;
+use App\Modules\Catalog\Application\DTOs\ProductPricingFacts;
 
 /**
  * Read side of the catalog for the shop pages. Returns read DTOs, never entities.
  *
- * Every method shows only what a customer may see: published products that are not deleted,
+ * Every method except pricingFacts() shows only what a customer may see: published products that are not deleted,
  * in active categories that are not deleted. Sold-out products are included (they show
  * the disabled "Sold out" state). Deleted variants never appear.
  */
@@ -62,4 +63,10 @@ interface StorefrontCatalogQuery
      * @return list<ProductCard>
      */
     public function search(string $term, int $limit): array;
+
+    /**
+     * What pricing needs to know about a product that is not deleted, or null. A hidden product is
+     * returned with isVisible = false, so the caller can say why it cannot be ordered.
+     */
+    public function pricingFacts(int $productId): ?ProductPricingFacts;
 }

@@ -27,7 +27,7 @@ interface SizeTierRepository
      */
     public function slugExists(Slug $slug, ?int $ignoreId = null): bool;
 
-    /** True when a variant that is not deleted uses this size. Phase 8 adds option prices to this check. */
+    /** True when a variant that is not deleted uses this size. Option prices are asked through the SizeTierPrices port. */
     public function isInUse(int $id): bool;
 
     /** A size tier that is in the Trash, or null. */

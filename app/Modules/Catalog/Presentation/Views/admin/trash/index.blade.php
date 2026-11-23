@@ -5,7 +5,7 @@
 <x-layouts.admin title="Trash">
     <x-admin.page-header title="Trash" :breadcrumbs="[['label' => 'Admin', 'url' => route('admin.dashboard')], ['label' => 'Trash']]" />
 
-    <p class="text-sm text-muted">Deleted catalog items wait here. Restore puts an item back where it was. Super admins can also remove an item for good.</p>
+    <p class="text-sm text-muted">Deleted catalog items and options wait here. Restore puts an item back where it was. Super admins can also remove an item for good.</p>
 
     <nav class="mt-4 flex gap-1 overflow-x-auto border-b border-line" aria-label="Item types">
         @foreach ($tabs as $key => $label)

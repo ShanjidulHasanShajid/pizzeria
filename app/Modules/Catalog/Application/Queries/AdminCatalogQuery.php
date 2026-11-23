@@ -80,4 +80,15 @@ interface AdminCatalogQuery
 
     /** One product that is not deleted, with variants, images and tag ids, for the edit form; or null. */
     public function product(int $id): ?AdminProductDetail;
+
+    /** True for a product that is not deleted and may have option groups. Combos use slots instead. */
+    public function isCustomizableProduct(int $productId): bool;
+
+    /**
+     * The products of a category and its sub-categories that may have option groups,
+     * hidden ones included; or null when there is no such category.
+     *
+     * @return list<int>|null
+     */
+    public function customizableProductIds(int $categoryId): ?array;
 }
