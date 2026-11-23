@@ -7,7 +7,16 @@ use App\Modules\Catalog\Infrastructure\Persistence\Models\KitchenStation as Kitc
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Product as ProductModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\SizeTier as SizeTierModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Tag as TagModel;
+use App\Modules\Customization\Domain\Entities\Option;
+use App\Modules\Customization\Domain\Entities\OptionGroup;
+use App\Modules\Customization\Domain\Entities\ProductOptionGroup;
+use App\Modules\Customization\Domain\Repositories\OptionGroupRepository;
+use App\Modules\Customization\Domain\Repositories\ProductOptionGroupRepository;
+use App\Modules\Customization\Domain\ValueObjects\SelectionRules;
 use App\Modules\Identity\Infrastructure\Persistence\Models\User;
+use App\Modules\Shared\Domain\ValueObjects\Money;
+use App\Modules\Shared\Domain\ValueObjects\SortOrder;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function (): void {
     $this->actingAs(User::factory()->admin()->create());
@@ -101,4 +110,75 @@ it('does not restore a product while its category is in the trash', function ():
     $this->post("/admin/products/{$product->id}/restore")->assertSessionHas('error');
 
     $this->assertSoftDeleted('products', ['id' => $product->id]);
+});
+
+describe('option groups and options (8.35)', function (): void {
+    beforeEach(function (): void {
+        Storage::fake('public');
+        $this->groups = app(OptionGroupRepository::class);
+        $crust = OptionGroup::create('Crust', 'Crust', SortOrder::first());
+        $crust->addOption(Option::withFlatPrice('Thin', Money::zero(), SortOrder::fromInt(10)));
+        $crust->addOption(Option::withFlatPrice('Stuffed', Money::zero(), SortOrder::fromInt(20)));
+        $this->crust = $this->groups->save($crust);
+        $this->thin = $this->groups->find($this->crust)->options()[0]->id();
+
+        $this->removeThin = function (): void {
+            $crust = $this->groups->find($this->crust);
+            $crust->removeOption($this->thin);
+            $this->groups->save($crust);
+        };
+    });
+
+    it('shows deleted groups and options on their own tabs', function (): void {
+        ($this->removeThin)();
+        $this->groups->delete($this->groups->save(OptionGroup::create('Old dips', 'Dips', SortOrder::fromInt(20))));
+
+        $this->get('/admin/trash')->assertOk()->assertSee('Option groups (1)')->assertSee('Options (1)')->assertSee('Thin (Crust)');
+        $this->get('/admin/trash?type=option_group')->assertOk()->assertSee('Old dips')->assertDontSee('Thin (Crust)');
+    });
+
+    it('restores a group and an option, but not an option of a deleted group', function (): void {
+        ($this->removeThin)();
+        $this->groups->delete($this->crust);
+
+        $this->post("/admin/options/{$this->thin}/restore")->assertSessionHas('error');
+        $this->assertSoftDeleted('options', ['id' => $this->thin]);
+
+        $this->post("/admin/option-groups/{$this->crust}/restore")->assertSessionHas('success');
+        $this->post("/admin/options/{$this->thin}/restore")->assertSessionHas('success');
+
+        expect($this->groups->find($this->crust)->options())->toHaveCount(2);
+    });
+
+    it('lets only a super admin delete a group and an option forever', function (): void {
+        ($this->removeThin)();
+
+        $this->delete("/admin/options/{$this->thin}/force")->assertForbidden();
+        $this->delete("/admin/option-groups/{$this->crust}/force")->assertForbidden();
+
+        $this->actingAs(User::factory()->superAdmin()->create());
+        $this->get('/admin/trash')->assertOk()->assertSee('Delete forever');
+        $this->delete("/admin/options/{$this->thin}/force")->assertSessionHas('success');
+        $this->delete("/admin/option-groups/{$this->crust}/force")->assertNotFound(); // not in the Trash yet
+
+        $this->groups->delete($this->crust);
+        $this->delete("/admin/option-groups/{$this->crust}/force")->assertSessionHas('success');
+
+        $this->assertDatabaseCount('options', 0);
+        $this->assertDatabaseCount('option_groups', 0);
+    });
+
+    it('refuses to delete a group forever while a product in the trash has it', function (): void {
+        $product = ProductModel::factory()->create();
+        app(ProductOptionGroupRepository::class)->save(
+            ProductOptionGroup::attach($product->id, $this->crust, SelectionRules::exactlyOne(), SortOrder::first()),
+        );
+        $product->delete();
+        $this->groups->delete($this->crust);
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        $this->delete("/admin/option-groups/{$this->crust}/force")->assertSessionHas('error');
+
+        $this->assertSoftDeleted('option_groups', ['id' => $this->crust]);
+    });
 });

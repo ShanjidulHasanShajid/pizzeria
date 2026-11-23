@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 use App\Modules\Catalog\Infrastructure\Persistence\Models\ProductVariant as ProductVariantModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\SizeTier as SizeTierModel;
+use App\Modules\Customization\Domain\Entities\Option;
+use App\Modules\Customization\Domain\Entities\OptionGroup;
+use App\Modules\Customization\Domain\Repositories\OptionGroupRepository;
 use App\Modules\Identity\Infrastructure\Persistence\Models\User;
+use App\Modules\Shared\Domain\ValueObjects\Money;
+use App\Modules\Shared\Domain\ValueObjects\SortOrder;
 
 beforeEach(function (): void {
     $this->actingAs(User::factory()->admin()->create());
@@ -95,4 +100,24 @@ it('does not let staff change sizes', function (): void {
     $this->patch("/admin/size-tiers/{$size->id}/toggle")->assertForbidden();
 
     expect($size->fresh()->is_active)->toBeTrue();
+});
+
+it('refuses to delete a size that option prices use, also forever', function (): void {
+    $size = SizeTierModel::factory()->create();
+    $groups = app(OptionGroupRepository::class);
+    $crust = OptionGroup::create('Crust', 'Crust', SortOrder::first());
+    $crust->addOption(Option::withPricesPerSize('Stuffed', [$size->id => Money::fromTaka('150')], SortOrder::first()));
+    $id = $groups->save($crust);
+
+    $this->delete("/admin/size-tiers/{$size->id}")->assertSessionHas('error');
+    $this->assertNotSoftDeleted('size_tiers', ['id' => $size->id]);
+
+    $saved = $groups->find($id);
+    $saved->removeOption($saved->options()[0]->id());
+    $groups->save($saved);
+
+    $this->delete("/admin/size-tiers/{$size->id}")->assertSessionHas('success');
+    $this->actingAs(User::factory()->superAdmin()->create());
+    $this->delete("/admin/size-tiers/{$size->id}/force")->assertSessionHas('error');
+    $this->assertSoftDeleted('size_tiers', ['id' => $size->id]);
 });
