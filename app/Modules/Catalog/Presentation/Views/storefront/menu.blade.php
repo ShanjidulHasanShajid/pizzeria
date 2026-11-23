@@ -1,5 +1,5 @@
 {{-- $categories: list<CategoryNode>. $sections: list<CategorySection>, only without a filter; with one: see _listing. --}}
-<x-layouts.storefront title="Menu" description="Our whole menu: pizza, pies, pasta, burgers, salads, desserts and drinks.">
+<x-layouts.storefront title="Menu" description="Our whole menu: pizza, pies, pasta, burgers, salads, desserts and drinks." :canonical="$canonical">
     <div class="page-container py-8">
         <x-breadcrumbs :items="[['label' => 'Home', 'url' => route('home')], ['label' => 'Menu']]" />
         <h1 class="mt-4 font-display text-3xl font-bold md:text-4xl">Menu</h1>

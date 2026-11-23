@@ -20,7 +20,6 @@ Route::view('/locations', $placeholder, ['title' => 'Locations', 'phase' => 17])
 Route::view('/contact', $placeholder, ['title' => 'Contact us', 'phase' => 17])->name('contact');
 Route::view('/faq', $placeholder, ['title' => 'FAQ', 'phase' => 17])->name('faq');
 Route::view('/catering', $placeholder, ['title' => 'Catering', 'phase' => 17])->name('catering');
-Route::view('/search', $placeholder, ['title' => 'Search', 'phase' => 10])->name('search');
 Route::view('/cart', $placeholder, ['title' => 'Cart', 'phase' => 11])->name('cart.show');
 Route::view('/checkout', $placeholder, ['title' => 'Checkout', 'phase' => 12])->name('checkout.show');
 Route::view('/order-success', $placeholder, ['title' => 'Order placed', 'phase' => 12])->name('orders.success');

@@ -1,6 +1,9 @@
 {{-- The filter form of every listing page. Works without JavaScript. --}}
 @use('App\Modules\Catalog\Domain\Enums\ProductSort')
 <form method="GET" action="{{ $pageUrl }}" class="mt-6 rounded-card border border-line bg-white p-4" aria-label="Filter the menu" x-data>
+    @if ($filter->search !== '')
+        <input type="hidden" name="q" value="{{ $filter->search }}">
+    @endif
     <div class="flex flex-wrap items-end gap-4">
         <div class="min-w-48">
             <label for="filter-sort" class="mb-1 block text-sm font-medium text-ink">Sort by</label>

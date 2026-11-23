@@ -1,4 +1,4 @@
-{{-- $category: CategoryPage. The rest: see _listing. --}}
+{{-- $category: CategoryPage. $image: address or null. $canonical, $pageNumber and the rest: see ListingData. --}}
 @php
     $crumbs = [['label' => 'Home', 'url' => route('home')], ['label' => 'Menu', 'url' => route('menu.index')]];
 
@@ -7,8 +7,9 @@
     }
 
     $crumbs[] = ['label' => $category->name];
+    $title = ($category->parentName === null ? $category->name.' menu' : $category->name.', '.$category->parentName).($pageNumber > 1 ? ', page '.$pageNumber : '');
 @endphp
-<x-layouts.storefront :title="$category->name" :description="$category->description ?: $category->name.' from our menu.'">
+<x-layouts.storefront :title="$title" :description="Str::limit($category->description ?: $category->name.' from our menu: see all dishes and prices.', 160)" :canonical="$canonical" :image="$image">
     <div class="page-container py-8">
         <x-breadcrumbs :items="$crumbs" />
         <h1 class="mt-4 font-display text-3xl font-bold md:text-4xl">{{ $category->name }}</h1>

@@ -8,6 +8,12 @@
                 <x-link-button :href="$pageUrl">Clear the filter</x-link-button>
             </x-slot:action>
         </x-empty-state>
+    @elseif ($filter->search !== '')
+        <x-empty-state class="mt-6" title="Nothing found" message="Check the spelling, or try a shorter word." icon="search">
+            <x-slot:action>
+                <x-link-button :href="route('menu.index')">Browse the menu</x-link-button>
+            </x-slot:action>
+        </x-empty-state>
     @else
         <x-empty-state class="mt-6" title="Nothing here yet" message="We are preparing something. Have a look at the rest of the menu." icon="shopping-bag">
             <x-slot:action>

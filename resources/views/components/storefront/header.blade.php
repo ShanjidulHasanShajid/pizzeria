@@ -10,13 +10,7 @@
 
         <x-storefront.logo :site-name="$siteName" :logo-url="$logoUrl" name-class="text-xl text-brand-700 md:text-2xl" />
 
-        <form action="{{ route('search') }}" method="GET" role="search" class="relative mx-auto hidden max-w-xl flex-1 md:block">
-            <label for="site-search" class="sr-only">Search the menu</label>
-            <input id="site-search" type="search" name="q" value="{{ request('q') }}" placeholder="Search pizza, pasta, desserts..." class="field pr-12">
-            <button type="submit" class="absolute inset-y-0 right-0 px-3 text-muted hover:text-brand-700" aria-label="Search">
-                <x-icon name="search" class="h-5 w-5" />
-            </button>
-        </form>
+        <x-storefront.search-form id="site-search" class="mx-auto hidden max-w-xl flex-1 md:block" :value="is_string(request()->query('q')) ? request()->query('q') : ''" />
 
         <div class="ml-auto flex items-center gap-1 md:ml-0">
             @auth

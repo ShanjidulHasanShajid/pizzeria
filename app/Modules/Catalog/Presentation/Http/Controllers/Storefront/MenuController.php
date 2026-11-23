@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Presentation\Http\Controllers\Storefront;
 
 use App\Modules\Catalog\Application\DTOs\CategoryPage;
-use App\Modules\Catalog\Application\DTOs\MenuFilter;
 use App\Modules\Catalog\Application\Queries\MenuQuery;
+use App\Modules\Catalog\Presentation\Support\ListingData;
 use App\Modules\Catalog\Presentation\Support\MenuFilterReader;
+use App\Modules\Shared\Application\Ports\FileStorage;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * The listing pages: the whole menu, a category, a sub-category, a tag.
@@ -21,6 +21,8 @@ final class MenuController
     public function __construct(
         private readonly MenuQuery $menu,
         private readonly MenuFilterReader $filters,
+        private readonly ListingData $listing,
+        private readonly FileStorage $files,
     ) {}
 
     /** Without a filter: the menu grouped by category. With one: a flat list. */
@@ -31,8 +33,8 @@ final class MenuController
         return view('catalog::storefront.menu', [
             'categories' => $this->menu->categories(),
             ...($filter->isActive()
-                ? $this->listing($request, $filter)
-                : ['sections' => $this->menu->sections(), ...$this->filterForm($request, $filter)]),
+                ? $this->listing->listing($request, $filter)
+                : ['sections' => $this->menu->sections(), ...$this->listing->form($request, $filter)]),
         ]);
     }
 
@@ -71,7 +73,7 @@ final class MenuController
 
         return view('catalog::storefront.tag', [
             'tag' => $badge,
-            ...$this->listing($request, $this->filters->read($request, pageTag: $badge->slug)),
+            ...$this->listing->listing($request, $this->filters->read($request, pageTag: $badge->slug)),
         ]);
     }
 
@@ -79,37 +81,8 @@ final class MenuController
     {
         return view('catalog::storefront.category', [
             'category' => $page,
-            ...$this->listing($request, $this->filters->read($request, categoryId: $page->id)),
+            'image' => $page->imagePath === null ? null : $this->files->url($page->imagePath),
+            ...$this->listing->listing($request, $this->filters->read($request, categoryId: $page->id)),
         ]);
-    }
-
-    /**
-     * What every listing shows. The paginator keeps the filter in its links.
-     *
-     * @return array<string, mixed>
-     */
-    private function listing(Request $request, MenuFilter $filter): array
-    {
-        $page = $this->menu->listing($filter);
-
-        return [
-            ...$this->filterForm($request, $filter),
-            'products' => new LengthAwarePaginator($page->items, $page->total, $page->perPage, $page->page, [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]),
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function filterForm(Request $request, MenuFilter $filter): array
-    {
-        return [
-            'filter' => $filter,
-            'filterTags' => $this->menu->filterTags(),
-            'pageUrl' => $request->url(),
-        ];
     }
 }

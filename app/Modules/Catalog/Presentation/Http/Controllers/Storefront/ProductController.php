@@ -22,14 +22,17 @@ final class ProductController
             abort(404);
         }
 
+        $images = array_map(fn (ProductImageView $image): array => [
+            'full' => $files->url($image->originalPath),
+            'thumbnail' => $files->url($image->thumbnailPath),
+            'isMain' => $image->isMain,
+        ], $detail->images);
+
         return view('catalog::storefront.product', [
             'product' => $detail,
             'category' => $menu->category($detail->categorySlug),
-            'images' => array_map(fn (ProductImageView $image): array => [
-                'full' => $files->url($image->originalPath),
-                'thumbnail' => $files->url($image->thumbnailPath),
-                'isMain' => $image->isMain,
-            ], $detail->images),
+            'images' => $images,
+            'mainImage' => collect($images)->firstWhere('isMain', true)['full'] ?? $images[0]['full'] ?? null,
             'related' => $catalog->relatedProducts($detail->id, self::RELATED_PRODUCTS),
         ]);
     }

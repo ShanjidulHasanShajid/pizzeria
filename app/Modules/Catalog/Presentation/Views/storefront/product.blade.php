@@ -1,5 +1,5 @@
 {{--
-    $product: ProductDetail. $category: CategoryPage (for the path) or null. $images: full, thumbnail, isMain.
+    $product: ProductDetail. $category: CategoryPage (for the path) or null. $images: full, thumbnail, isMain. $mainImage: address or null.
     $related: list<ProductCard>.
 --}}
 @use('App\Modules\Catalog\Domain\Enums\ProductType')
@@ -16,17 +16,17 @@
     }
 
     $crumbs[] = ['label' => $product->name];
-    $main = collect($images)->firstWhere('isMain', true) ?? $images[0] ?? ['full' => asset('images/placeholder.svg')];
+    $main = $mainImage ?? asset('images/placeholder.svg');
     $start = $product->startVariant();
 @endphp
-<x-layouts.storefront :title="$product->name" :description="$product->shortDescription ?: $product->name.' from our menu.'">
+<x-layouts.storefront :title="$product->name.' - '.$product->categoryName" :description="Str::limit($product->shortDescription ?: $product->name.' from our '.$product->categoryName.' menu. Order online.', 160)" :image="$mainImage">
     <div class="page-container py-8">
         <x-breadcrumbs :items="$crumbs" />
 
         <div class="mt-6 grid gap-8 lg:grid-cols-2">
-            <div x-data="{ shown: @js($main['full']) }">
+            <div x-data="{ shown: @js($main) }">
                 <div class="aspect-square overflow-hidden rounded-card border border-line bg-cream">
-                    <img src="{{ $main['full'] }}" x-bind:src="shown" alt="{{ $product->name }}" class="h-full w-full object-cover {{ $product->isAvailable ? '' : 'opacity-50 grayscale' }}">
+                    <img src="{{ $main }}" x-bind:src="shown" alt="{{ $product->name }}" class="h-full w-full object-cover {{ $product->isAvailable ? '' : 'opacity-50 grayscale' }}">
                 </div>
                 @if (count($images) > 1)
                     <ul class="mt-3 flex flex-wrap gap-2" aria-label="Photos">
