@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Modules\Content\Domain\Enums\ContentType;
 use App\Modules\Content\Presentation\Http\Controllers\Admin\ContentItemController;
 use App\Modules\Content\Presentation\Http\Controllers\Admin\HomeController;
+use App\Modules\Content\Presentation\Http\Controllers\Admin\LocationController;
+use App\Modules\Content\Presentation\Http\Controllers\Admin\NavigationController;
 use App\Modules\Content\Presentation\Http\Controllers\Admin\SettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -46,4 +48,25 @@ Route::middleware('can:manage-content')->group(function (): void {
     }
 
     Route::post('gallery/upload', [ContentItemController::class, 'upload'])->name('gallery.upload');
+
+    Route::prefix('navigation')->name('navigation.')->controller(NavigationController::class)->group(function (): void {
+        Route::get('/', 'index')->name('index');
+        Route::post('/reorder', 'reorder')->name('reorder');
+        // {item} is a NavRoute enum: any other word is a 404.
+        Route::put('/{item}', 'update')->name('update');
+        Route::patch('/{item}/visibility', 'toggleVisibility')->name('visibility');
+        Route::patch('/{item}/highlight', 'toggleHighlight')->name('highlight');
+    });
+
+    Route::prefix('locations')->name('locations.')->where(['location' => '[0-9]+'])->controller(LocationController::class)->group(function (): void {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::post('/reorder', 'reorder')->name('reorder');
+        Route::get('/{location}/edit', 'edit')->name('edit');
+        Route::put('/{location}', 'update')->name('update');
+        Route::patch('/{location}/toggle', 'toggle')->name('toggle');
+        Route::delete('/{location}', 'destroy')->name('destroy');
+        Route::post('/{location}/restore', 'restore')->name('restore');
+    });
 });

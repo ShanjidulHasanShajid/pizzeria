@@ -94,6 +94,16 @@ it('applies the access matrix', function (?string $role, string $uri, int $statu
     ['staff', '/admin/home', 403],
     ['admin', '/admin/home', 200],
     ['super_admin', '/admin/home', 200],
+    [null, '/admin/navigation', 302],
+    ['customer', '/admin/navigation', 403],
+    ['staff', '/admin/navigation', 403],
+    ['admin', '/admin/navigation', 200],
+    ['super_admin', '/admin/navigation', 200],
+    [null, '/admin/locations', 302],
+    ['customer', '/admin/locations', 403],
+    ['staff', '/admin/locations', 403],
+    ['admin', '/admin/locations', 200],
+    ['super_admin', '/admin/locations', 200],
 ]);
 
 it('sends a guest who opens the admin area to the login page', function (): void {
