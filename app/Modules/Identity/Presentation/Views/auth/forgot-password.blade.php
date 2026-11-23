@@ -1,4 +1,4 @@
-<x-layouts.storefront title="Forgot password">
+<x-layouts.storefront title="Forgot password" :noindex="true">
     <x-auth.card title="Forgot your password?" subtitle="Enter your email and we will send you a link to choose a new one.">
         <form method="POST" action="{{ route('password.email') }}" class="space-y-4" novalidate>
             @csrf

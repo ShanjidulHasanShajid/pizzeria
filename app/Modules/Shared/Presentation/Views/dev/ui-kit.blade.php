@@ -174,12 +174,18 @@
     {{-- 4.26 Product cards (needs the layout routes from 4.40 to render links) --}}
     <section class="space-y-3" aria-labelledby="kit-cards">
         <h2 id="kit-cards" class="text-lg font-semibold">Product cards</h2>
-        @inject('placeholder', 'App\Modules\Shared\Presentation\Support\PlaceholderData')
+        @php
+            $kitCard = fn (array $changes): array => [
+                'name' => 'Garlic Bread', 'slug' => 'garlic-bread', 'description' => 'Freshly made to order with quality ingredients.',
+                'price' => 24000, 'isFromPrice' => false, 'state' => 'view', 'badges' => [], 'sizes' => [], 'tags' => [],
+                'image' => asset('images/placeholder.svg'), ...$changes,
+            ];
+        @endphp
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <x-storefront.product-card :product="$placeholder->products(1, 3)[0]" />
-            <x-storefront.product-card :product="$placeholder->products(1, 0)[0]" />
-            <x-storefront.product-card :product="$placeholder->combos()[0]" />
-            <x-storefront.product-card :product="$placeholder->products(1, 9)[0]" />
+            <x-storefront.product-card :product="$kitCard([])" />
+            <x-storefront.product-card :product="$kitCard(['name' => 'Margherita', 'price' => 59000, 'isFromPrice' => true, 'state' => 'options', 'sizes' => ['Personal', 'Medium', 'Large'], 'tags' => [['label' => 'Veg', 'icon' => 'check-circle', 'class' => 'text-accent-700']]])" />
+            <x-storefront.product-card :product="$kitCard(['name' => 'Family Feast', 'price' => 189000, 'state' => 'combo', 'badges' => [['variant' => 'hot', 'label' => 'Hot']]])" />
+            <x-storefront.product-card :product="$kitCard(['name' => 'Chocolate Brownie', 'price' => 22000, 'state' => 'soldout'])" />
         </div>
     </section>
 

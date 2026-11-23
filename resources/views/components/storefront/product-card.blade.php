@@ -1,9 +1,9 @@
-{{-- $product: a ProductCard, or (until Phase 10) a fake array of PlaceholderData. --}}
+{{-- $product: a ProductCard, or an array of the same shape as ProductCards::toArray() (UI kit). --}}
 @props(['product'])
 @inject('cards', 'App\Modules\Catalog\Presentation\Support\ProductCards')
 @php
     $product = is_array($product) ? $product : $cards->toArray($product);
-    $state = $product['state']; // simple | view | options | combo | soldout
+    $state = $product['state']; // view | options | combo | soldout
     $soldOut = $state === 'soldout';
     $url = route('products.show', $product['slug']);
 @endphp
@@ -25,15 +25,35 @@
 
     <div class="flex flex-1 flex-col p-4">
         <h3 class="font-semibold text-ink"><a href="{{ $url }}" class="hover:text-brand-700">{{ $product['name'] }}</a></h3>
-        <p class="mt-1 line-clamp-2 text-sm text-muted">{{ $product['description'] }}</p>
+        @if ($product['description'] !== '')
+            <p class="mt-1 line-clamp-2 text-sm text-muted">{{ $product['description'] }}</p>
+        @endif
+
+        @if ($product['tags'] !== [])
+            <ul class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium" aria-label="Tags">
+                @foreach ($product['tags'] as $tag)
+                    <li class="inline-flex items-center gap-1 {{ $tag['class'] }}">
+                        @if ($tag['icon'])
+                            <x-icon :name="$tag['icon']" class="h-3.5 w-3.5" />
+                        @endif
+                        {{ $tag['label'] }}
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+
+        @if ($product['sizes'] !== [])
+            <ul class="mt-2 flex flex-wrap gap-1 text-xs text-muted" aria-label="Sizes">
+                @foreach ($product['sizes'] as $size)
+                    <li class="rounded-full border border-line px-2 py-0.5">{{ $size }}</li>
+                @endforeach
+            </ul>
+        @endif
 
         <div class="mt-auto flex items-center justify-between gap-2 pt-4">
-            <x-money :amount="$product['price']" :from="$product['isFromPrice'] ?? in_array($state, ['options', 'combo'], true)" />
+            <x-money :amount="$product['price']" :from="$product['isFromPrice']" />
 
             @switch($state)
-                @case('simple')
-                    <x-button size="sm" aria-label="Add {{ $product['name'] }} to cart">Add to cart</x-button>
-                    @break
                 @case('view')
                     <x-link-button :href="$url" variant="outline" size="sm">View details</x-link-button>
                     @break

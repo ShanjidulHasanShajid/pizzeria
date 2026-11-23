@@ -12,9 +12,6 @@ use Illuminate\Support\Facades\Route;
 */
 $placeholder = 'shared::storefront.placeholder';
 
-Route::view('/menu', $placeholder, ['title' => 'Menu', 'phase' => 10, 'showProducts' => true])->name('menu.index');
-Route::view('/menu/{category}', $placeholder, ['title' => 'Category', 'phase' => 10, 'showProducts' => true])->name('categories.show');
-Route::view('/products/{product}', $placeholder, ['title' => 'Product', 'phase' => 10])->name('products.show');
 Route::view('/build-your-pizza', $placeholder, ['title' => 'Build your pizza', 'phase' => 16])->name('builder.show');
 Route::view('/gift-boxes', $placeholder, ['title' => 'Gift boxes', 'phase' => 15])->name('gift-boxes.index');
 Route::view('/meal-deals', $placeholder, ['title' => 'Meal deals', 'phase' => 15])->name('meal-deals.index');
@@ -23,7 +20,6 @@ Route::view('/locations', $placeholder, ['title' => 'Locations', 'phase' => 17])
 Route::view('/contact', $placeholder, ['title' => 'Contact us', 'phase' => 17])->name('contact');
 Route::view('/faq', $placeholder, ['title' => 'FAQ', 'phase' => 17])->name('faq');
 Route::view('/catering', $placeholder, ['title' => 'Catering', 'phase' => 17])->name('catering');
-Route::view('/search', $placeholder, ['title' => 'Search', 'phase' => 10])->name('search');
 Route::view('/cart', $placeholder, ['title' => 'Cart', 'phase' => 11])->name('cart.show');
 Route::view('/checkout', $placeholder, ['title' => 'Checkout', 'phase' => 12])->name('checkout.show');
 Route::view('/order-success', $placeholder, ['title' => 'Order placed', 'phase' => 12])->name('orders.success');

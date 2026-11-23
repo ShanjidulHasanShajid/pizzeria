@@ -258,3 +258,8 @@ describe('availability', function (): void {
             ->toBe(PricingFailureReason::WrongProduct);
     });
 });
+
+it('says which group refused the line', function (): void {
+    expect(PricingFailed::missingRequiredGroup('Crust', 7)->optionGroupId)->toBe(7)
+        ->and(PricingFailed::productSoldOut('Margherita')->optionGroupId)->toBeNull();
+});

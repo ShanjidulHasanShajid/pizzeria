@@ -1,4 +1,4 @@
-<x-layouts.storefront title="Create account">
+<x-layouts.storefront title="Create account" :noindex="true">
     <x-auth.card title="Create your account" subtitle="Order faster and track every delivery.">
         <form method="POST" action="{{ route('register') }}" class="space-y-4" novalidate>
             @csrf

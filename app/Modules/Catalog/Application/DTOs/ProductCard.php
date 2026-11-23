@@ -20,6 +20,7 @@ final readonly class ProductCard
      * @param  ?string  $imagePath  thumbnail of the main image, relative to the public disk
      * @param  list<TagBadge>  $tags
      * @param  bool  $isAvailable  false shows the disabled "Sold out" state
+     * @param  bool  $hasOptions  has at least one active option group (crust, toppings ...)
      */
     public function __construct(
         public int $id,
@@ -37,5 +38,6 @@ final readonly class ProductCard
         public string $leadTimeLabel,
         public LeadTimeClass $leadTimeClass,
         public bool $isAvailable,
+        public bool $hasOptions,
     ) {}
 }

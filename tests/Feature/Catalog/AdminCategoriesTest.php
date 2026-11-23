@@ -28,9 +28,10 @@ describe('the list', function (): void {
     });
 
     it('searches and filters by status, and lists the trash', function (): void {
-        CategoryModel::factory()->create(['name' => 'Antipasti']);
-        CategoryModel::factory()->inactive()->create(['name' => 'Bruschetta']);
-        CategoryModel::factory()->create(['name' => 'Calzone'])->delete();
+        // Fixed slugs: the search looks at them too, and a random one may contain "anti" ("laudantium").
+        CategoryModel::factory()->create(['name' => 'Antipasti', 'slug' => 'antipasti']);
+        CategoryModel::factory()->inactive()->create(['name' => 'Bruschetta', 'slug' => 'bruschetta']);
+        CategoryModel::factory()->create(['name' => 'Calzone', 'slug' => 'calzone'])->delete();
 
         $this->get('/admin/categories?q=anti')->assertSee('Antipasti')->assertDontSee('Bruschetta');
         $this->get('/admin/categories?status=inactive')->assertSee('Bruschetta')->assertDontSee('Antipasti');

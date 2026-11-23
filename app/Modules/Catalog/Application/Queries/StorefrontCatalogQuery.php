@@ -70,7 +70,7 @@ interface StorefrontCatalogQuery
     public function megaMenu(): array;
 
     /**
-     * Products whose name or short description contains $term.
+     * Products whose name or short description contains $term; matches in the name come first.
      *
      * @return list<ProductCard>
      */

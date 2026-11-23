@@ -11,8 +11,6 @@ it('serves every storefront page', function (string $uri): void {
 })->with([
     '/',
     '/menu',
-    '/menu/pizza',
-    '/products/margherita',
     '/build-your-pizza',
     '/gift-boxes',
     '/meal-deals',

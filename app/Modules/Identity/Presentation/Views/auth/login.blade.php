@@ -1,4 +1,4 @@
-<x-layouts.storefront title="Sign in">
+<x-layouts.storefront title="Sign in" :noindex="true">
     <x-auth.card title="Sign in" subtitle="Welcome back. Sign in to see your orders and check out faster.">
         <form method="POST" action="{{ route('login') }}" class="space-y-4" novalidate>
             @csrf

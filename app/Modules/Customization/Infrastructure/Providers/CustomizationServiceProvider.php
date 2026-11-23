@@ -9,6 +9,7 @@ use App\Modules\Customization\Application\Ports\PricingProductSource;
 use App\Modules\Customization\Application\Ports\SizeTiers;
 use App\Modules\Customization\Application\Queries\AdminOptionQuery;
 use App\Modules\Customization\Application\Queries\OptionPriceUsageQuery;
+use App\Modules\Customization\Application\Queries\ProductConfigurationQuery;
 use App\Modules\Customization\Application\Queries\ProductOptionsQuery;
 use App\Modules\Customization\Application\Queries\TrashedOptionsQuery;
 use App\Modules\Customization\Domain\Repositories\OptionGroupRepository;
@@ -18,6 +19,7 @@ use App\Modules\Customization\Infrastructure\Adapters\CatalogPricingProductSourc
 use App\Modules\Customization\Infrastructure\Adapters\CatalogSizeTiers;
 use App\Modules\Customization\Infrastructure\Persistence\Repositories\EloquentOptionGroupRepository;
 use App\Modules\Customization\Infrastructure\Persistence\Repositories\EloquentProductOptionGroupRepository;
+use App\Modules\Customization\Infrastructure\Queries\CatalogProductConfigurationQuery;
 use App\Modules\Customization\Infrastructure\Queries\EloquentAdminOptionQuery;
 use App\Modules\Customization\Infrastructure\Queries\EloquentOptionPriceUsageQuery;
 use App\Modules\Customization\Infrastructure\Queries\EloquentProductOptionsQuery;
@@ -36,6 +38,7 @@ final class CustomizationServiceProvider extends ModuleServiceProvider
         OptionGroupRepository::class => EloquentOptionGroupRepository::class,
         ProductOptionGroupRepository::class => EloquentProductOptionGroupRepository::class,
         ProductOptionsQuery::class => EloquentProductOptionsQuery::class,
+        ProductConfigurationQuery::class => CatalogProductConfigurationQuery::class,
         AdminOptionQuery::class => EloquentAdminOptionQuery::class,
         TrashedOptionsQuery::class => EloquentTrashedOptionsQuery::class,
         OptionPriceUsageQuery::class => EloquentOptionPriceUsageQuery::class,

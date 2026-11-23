@@ -122,33 +122,33 @@ final class PricingEngine
 
         if ($count === 0) {
             if ($rules->isRequired()) {
-                throw PricingFailed::missingRequiredGroup($title);
+                throw PricingFailed::missingRequiredGroup($title, $optionGroupId);
             }
 
             return [];
         }
 
         if ($count < $rules->minimum()) {
-            throw PricingFailed::tooFewChoices($title, $rules->minimum());
+            throw PricingFailed::tooFewChoices($title, $rules->minimum(), $optionGroupId);
         }
 
         if ($count > $rules->maximum()) {
-            throw PricingFailed::tooManyChoices($title, $rules->maximum());
+            throw PricingFailed::tooManyChoices($title, $rules->maximum(), $optionGroupId);
         }
 
         $options = []; // option id => Option
         $prices = [];  // option id => price at this size
 
         foreach ($optionIds as $optionId) {
-            $option = $group->option($optionId) ?? throw PricingFailed::optionNotInGroup($title);
+            $option = $group->option($optionId) ?? throw PricingFailed::optionNotInGroup($title, $optionGroupId);
 
             if (! $option->isAvailable()) {
-                throw PricingFailed::optionSoldOut($option->name());
+                throw PricingFailed::optionSoldOut($option->name(), $optionGroupId);
             }
 
             $options[$optionId] = $option;
             $prices[$optionId] = $option->priceFor($variant->sizeTierId())
-                ?? throw PricingFailed::optionNotOfferedForSize($option->name(), $variant->label());
+                ?? throw PricingFailed::optionNotOfferedForSize($option->name(), $variant->label(), $optionGroupId);
         }
 
         $freeIds = $this->cheapest($prices, $rules->freeCount());

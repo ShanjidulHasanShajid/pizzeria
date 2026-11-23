@@ -18,4 +18,12 @@ interface ProductOptionsQuery
      * @return list<ProductOptionGroupView>
      */
     public function forProduct(int $productId): array;
+
+    /**
+     * Those of the products that have at least one active group, with one query for all of them.
+     *
+     * @param  list<int>  $productIds
+     * @return list<int>
+     */
+    public function productIdsWithOptions(array $productIds): array;
 }

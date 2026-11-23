@@ -1,4 +1,4 @@
-<x-layouts.storefront title="My account">
+<x-layouts.storefront title="My account" :noindex="true">
     <div class="page-container py-10">
         <x-breadcrumbs :items="[['label' => 'Home', 'url' => route('home')], ['label' => 'My account']]" />
         <h1 class="mt-2 font-display text-3xl font-bold">Hello, {{ auth()->user()->name }}</h1>
