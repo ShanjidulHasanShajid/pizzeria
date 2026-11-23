@@ -15,8 +15,9 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * "What is sold out today?" for all options on one page, and the Trash actions of single options.
- * Routes require "manage-catalog"; "delete forever" also requires "force-delete".
+ * "Sold out today" for all options on one page (routes require "manage-availability": staff too),
+ * and the Trash actions of single options (routes require "manage-catalog";
+ * "delete forever" also requires "force-delete").
  */
 final class OptionController
 {

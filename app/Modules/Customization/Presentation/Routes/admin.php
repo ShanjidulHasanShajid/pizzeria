@@ -9,8 +9,20 @@ use App\Modules\Customization\Presentation\Http\Controllers\Admin\PriceMatrixCon
 use Illuminate\Support\Facades\Route;
 
 // Loaded with prefix "/admin", names "admin." and middleware web + auth + staff
-// (ModuleServiceProvider). Everything here also needs the "manage-catalog" gate.
+// (ModuleServiceProvider).
 
+// "Sold out today": the kitchen (staff) may switch options, and nothing else here (decision 36).
+Route::middleware('can:manage-availability')
+    ->prefix('option-availability')
+    ->name('option-availability.')
+    ->where(['group' => '[0-9]+', 'option' => '[0-9]+'])
+    ->controller(OptionController::class)
+    ->group(function (): void {
+        Route::get('/', 'availability')->name('index');
+        Route::patch('/{group}/{option}', 'toggle')->name('toggle');
+    });
+
+// Everything below needs the "manage-catalog" gate: admins and super admins.
 Route::middleware('can:manage-catalog')
     ->where(['group' => '[0-9]+', 'option' => '[0-9]+'])
     ->group(function (): void {
@@ -36,11 +48,6 @@ Route::middleware('can:manage-catalog')
             Route::controller(BulkAttachController::class)->group(function (): void {
                 Route::get('/{group}/bulk-attach', 'create')->name('bulk-attach.create');
                 Route::post('/{group}/bulk-attach', 'store')->name('bulk-attach.store');
-            });
-
-            Route::controller(OptionController::class)->group(function (): void {
-                Route::get('/availability', 'availability')->name('availability');
-                Route::patch('/{group}/options/{option}/availability', 'toggle')->name('options.toggle');
             });
         });
 

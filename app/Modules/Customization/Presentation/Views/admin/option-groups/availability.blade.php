@@ -1,6 +1,6 @@
 {{-- $groups: list<AdminOptionGroupDetail>, in sort order --}}
 <x-layouts.admin title="Sold out today">
-    <x-admin.page-header title="Sold out today" :breadcrumbs="[['label' => 'Admin', 'url' => route('admin.dashboard')], ['label' => 'Option groups', 'url' => route('admin.option-groups.index')], ['label' => 'Sold out today']]" />
+    <x-admin.page-header title="Sold out today" :breadcrumbs="[['label' => 'Admin', 'url' => route('admin.dashboard')], ['label' => 'Sold out today']]" />
 
     <p class="mb-4 max-w-2xl text-sm text-muted">One click marks an option sold out, or available again, on every product that offers it.</p>
 
@@ -24,7 +24,7 @@
                                     @unless ($option->isAvailable)
                                         <x-badge variant="soldout">Sold out</x-badge>
                                     @endunless
-                                    <form method="POST" action="{{ route('admin.option-groups.options.toggle', [$group->id, $option->id]) }}">
+                                    <form method="POST" action="{{ route('admin.option-availability.toggle', [$group->id, $option->id]) }}">
                                         @csrf
                                         @method('PATCH')
                                         <x-button type="submit" size="sm" variant="outline" :aria-label="($option->isAvailable ? 'Mark sold out: ' : 'Make available: ').$option->name">{{ $option->isAvailable ? 'Sold out' : 'Available' }}</x-button>

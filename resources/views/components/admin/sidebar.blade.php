@@ -2,7 +2,8 @@
     // [label, route name, gate]. A link shows only if the current user passes the gate.
     // A link is clickable only once a later phase defines the route.
     $groups = [
-        ['label' => null, 'items' => [['Dashboard', 'admin.dashboard', 'access-admin'], ['Orders', 'admin.orders.index', 'manage-orders']]],
+        ['label' => null, 'items' => [['Dashboard', 'admin.dashboard', 'access-admin'], ['Orders', 'admin.orders.index', 'manage-orders'],
+            ['Sold out today', 'admin.option-availability.index', 'manage-availability']]],
         ['label' => 'Catalog', 'items' => [
             ['Categories', 'admin.categories.index', 'manage-catalog'], ['Products', 'admin.products.index', 'manage-catalog'],
             ['Size Tiers', 'admin.size-tiers.index', 'manage-catalog'], ['Tags', 'admin.tags.index', 'manage-catalog'],

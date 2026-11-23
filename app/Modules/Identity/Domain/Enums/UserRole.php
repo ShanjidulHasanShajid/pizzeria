@@ -43,7 +43,8 @@ enum UserRole: string
     {
         return match ($ability) {
             Ability::AccessAdmin,
-            Ability::ManageOrders => $this->isStaffOrAbove(),
+            Ability::ManageOrders,
+            Ability::ManageAvailability => $this->isStaffOrAbove(),
 
             Ability::AccessAdminSections,
             Ability::ManageCatalog,

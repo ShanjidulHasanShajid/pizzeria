@@ -12,10 +12,11 @@ enum Ability: string
 {
     // Doors into the admin area
     case AccessAdmin = 'access-admin';                 // staff, admin, super admin
-    case AccessAdminSections = 'access-admin-sections'; // admin, super admin (everything except orders)
+    case AccessAdminSections = 'access-admin-sections'; // admin, super admin
 
     // Sections
     case ManageOrders = 'manage-orders';
+    case ManageAvailability = 'manage-availability'; // mark options sold out today: also staff
     case ManageCatalog = 'manage-catalog';
     case ManageContent = 'manage-content';  // also reviews and messages
     case ManageSales = 'manage-sales';      // coupons, delivery zones
