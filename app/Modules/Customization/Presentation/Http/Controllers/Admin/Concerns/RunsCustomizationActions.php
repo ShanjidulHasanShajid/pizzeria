@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Customization\Presentation\Http\Controllers\Admin\Concerns;
 
 use App\Modules\Customization\Domain\Exceptions\OptionGroupInUse;
+use App\Modules\Customization\Domain\Exceptions\OptionRestoreBlocked;
 use App\Modules\Shared\Domain\Exceptions\EntityNotFound;
 use App\Modules\Shared\Domain\Exceptions\ValidationFailed;
 use App\Modules\Shared\Presentation\Support\ValidationFailedTranslator;
@@ -14,7 +15,7 @@ use Illuminate\Http\RedirectResponse;
 /**
  * The same three answers for every option admin action:
  * - a broken form rule goes back to the form with the error under the field,
- * - "still in use" goes back with a red message at the top,
+ * - "still in use" or "restore the group first" goes back with a red message at the top,
  * - an unknown id is a 404 page.
  */
 trait RunsCustomizationActions
@@ -45,8 +46,8 @@ trait RunsCustomizationActions
     {
         try {
             $action();
-        } catch (OptionGroupInUse $inUse) {
-            return back()->with('error', $inUse->getMessage());
+        } catch (OptionGroupInUse|OptionRestoreBlocked $refused) {
+            return back()->with('error', $refused->getMessage());
         } catch (EntityNotFound) {
             abort(404);
         }

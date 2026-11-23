@@ -2,6 +2,7 @@
 <x-layouts.admin title="Option groups">
     <x-admin.page-header title="Option groups" :breadcrumbs="[['label' => 'Admin', 'url' => route('admin.dashboard')], ['label' => 'Option groups']]">
         <x-slot:actions>
+            <x-link-button :href="route('admin.option-groups.availability')" variant="outline">Sold out today</x-link-button>
             <x-link-button :href="route('admin.option-groups.create')">Add option group</x-link-button>
         </x-slot:actions>
     </x-admin.page-header>

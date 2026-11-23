@@ -3,6 +3,7 @@
     <x-admin.page-header :title="'Edit '.$group->name" :breadcrumbs="[['label' => 'Admin', 'url' => route('admin.dashboard')], ['label' => 'Option groups', 'url' => route('admin.option-groups.index')], ['label' => 'Edit']]">
         <x-slot:actions>
             <x-link-button :href="route('admin.option-groups.prices.edit', $group->id)" variant="outline">Price matrix</x-link-button>
+            <x-link-button :href="route('admin.option-groups.bulk-attach.create', $group->id)" variant="outline">Attach to a category</x-link-button>
         </x-slot:actions>
     </x-admin.page-header>
 

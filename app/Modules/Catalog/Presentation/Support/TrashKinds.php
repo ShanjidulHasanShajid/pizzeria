@@ -29,7 +29,15 @@ final class TrashKinds
         ],
         'size_tier' => [
             'tab' => 'Size tiers', 'one' => 'Size tier', 'route' => 'admin.size-tiers',
-            'forever' => 'The size is deleted for good. This only works when no variant uses it, also removed variants and products in the Trash.',
+            'forever' => 'The size is deleted for good. This only works when no variant and no option price uses it, also removed ones and products in the Trash.',
+        ],
+        'option_group' => [
+            'tab' => 'Option groups', 'one' => 'Option group', 'route' => 'admin.option-groups',
+            'forever' => 'The group, its options, their prices and images are deleted for good. This only works when no product has the group, also none in the Trash.',
+        ],
+        'option' => [
+            'tab' => 'Options', 'one' => 'Option', 'route' => 'admin.options',
+            'forever' => 'The option, its prices and its image are deleted for good. Old orders keep their own copy of the name and price.',
         ],
         'kitchen_station' => [
             'tab' => 'Kitchen stations', 'one' => 'Kitchen station', 'route' => 'admin.kitchen-stations',

@@ -11,6 +11,7 @@ use App\Modules\Customization\Application\DTOs\UpdateOptionGroupInput;
 use App\Modules\Customization\Application\Queries\AdminOptionQuery;
 use App\Modules\Customization\Application\UseCases\OptionGroups\CreateOptionGroup;
 use App\Modules\Customization\Application\UseCases\OptionGroups\DeleteOptionGroup;
+use App\Modules\Customization\Application\UseCases\OptionGroups\ForceDeleteOptionGroup;
 use App\Modules\Customization\Application\UseCases\OptionGroups\ReorderOptionGroups;
 use App\Modules\Customization\Application\UseCases\OptionGroups\RestoreOptionGroup;
 use App\Modules\Customization\Application\UseCases\OptionGroups\UpdateOptionGroup;
@@ -22,7 +23,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 
 /**
- * Admin screens for option groups (Crust, Dips ...). Routes require "manage-catalog".
+ * Admin screens for option groups (Crust, Dips ...). Routes require "manage-catalog";
+ * "delete forever" also requires "force-delete" (super admins).
  */
 final class OptionGroupController
 {
@@ -86,6 +88,14 @@ final class OptionGroupController
         return $this->runListAction(
             fn () => $restoreGroup->handle(new OptionGroupItemInput($group)),
             'Option group restored.',
+        );
+    }
+
+    public function forceDestroy(int $group, ForceDeleteOptionGroup $forceDelete): RedirectResponse
+    {
+        return $this->runListAction(
+            fn () => $forceDelete->handle(new OptionGroupItemInput($group)),
+            'Option group deleted forever.',
         );
     }
 
