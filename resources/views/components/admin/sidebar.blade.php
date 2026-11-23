@@ -11,7 +11,8 @@
             ['Combos', 'admin.combos.index', 'manage-catalog'], ['Pizza Builder', 'admin.pizza-builder.edit', 'manage-catalog'],
         ]],
         ['label' => 'Content', 'items' => [
-            ['Home', 'admin.home.edit', 'manage-content'], ['Banners', 'admin.banners.index', 'manage-content'], ['Gallery', 'admin.gallery.index', 'manage-content'],
+            ['Home', 'admin.home.edit', 'manage-content'], ['Hero Slides', 'admin.hero-slides.index', 'manage-content'],
+            ['Trust Badges', 'admin.trust-badges.index', 'manage-content'], ['Banners', 'admin.banners.index', 'manage-content'], ['Gallery', 'admin.gallery.index', 'manage-content'],
             ['Navigation', 'admin.navigation.index', 'manage-content'], ['Pages', 'admin.pages.index', 'manage-content'],
             ['FAQs', 'admin.faqs.index', 'manage-content'], ['Locations', 'admin.locations.index', 'manage-content'],
         ]],
