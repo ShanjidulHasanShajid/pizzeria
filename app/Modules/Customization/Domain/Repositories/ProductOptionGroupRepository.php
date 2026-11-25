@@ -20,6 +20,14 @@ interface ProductOptionGroupRepository
      */
     public function forProduct(int $productId): array;
 
+    /**
+     * Everything attached to any of these products, product by product in sort order.
+     *
+     * @param  list<int>  $productIds
+     * @return list<ProductOptionGroup>
+     */
+    public function forProducts(array $productIds): array;
+
     /** Inserts the attachment when it has no id yet, otherwise updates its rules and position. Returns the id. */
     public function save(ProductOptionGroup $attachment): int;
 

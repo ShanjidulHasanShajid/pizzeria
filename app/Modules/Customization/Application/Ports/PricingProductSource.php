@@ -14,4 +14,12 @@ interface PricingProductSource
 {
     /** Null when there is no such product, or it is deleted. */
     public function find(int $productId): ?PricingProduct;
+
+    /**
+     * Several at once. Unknown and deleted products are left out.
+     *
+     * @param  list<int>  $productIds
+     * @return array<int, PricingProduct> product id => product
+     */
+    public function findMany(array $productIds): array;
 }

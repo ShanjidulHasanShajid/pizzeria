@@ -14,7 +14,7 @@ use App\Modules\Catalog\Application\DTOs\ProductPricingFacts;
 /**
  * Read side of the catalog for the shop pages. Returns read DTOs, never entities.
  *
- * Every method except pricingFacts() shows only what a customer may see: published products that are not deleted,
+ * Every method except the two for pricing shows only what a customer may see: published products that are not deleted,
  * in active categories that are not deleted. Sold-out products are included (they show
  * the disabled "Sold out" state). Deleted variants never appear.
  */
@@ -81,4 +81,13 @@ interface StorefrontCatalogQuery
      * returned with isVisible = false, so the caller can say why it cannot be ordered.
      */
     public function pricingFacts(int $productId): ?ProductPricingFacts;
+
+    /**
+     * The same for several products at once, always with the same number of database queries.
+     * Unknown and deleted products are left out.
+     *
+     * @param  list<int>  $productIds
+     * @return array<int, ProductPricingFacts> product id => facts
+     */
+    public function pricingFactsFor(array $productIds): array;
 }

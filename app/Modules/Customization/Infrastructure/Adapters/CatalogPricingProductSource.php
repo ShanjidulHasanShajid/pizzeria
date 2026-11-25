@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Customization\Infrastructure\Adapters;
 
+use App\Modules\Catalog\Application\DTOs\ProductPricingFacts;
 use App\Modules\Catalog\Application\DTOs\VariantPricingFacts;
 use App\Modules\Catalog\Application\Queries\StorefrontCatalogQuery;
 use App\Modules\Customization\Application\Ports\PricingProductSource;
@@ -21,10 +22,16 @@ final class CatalogPricingProductSource implements PricingProductSource
     {
         $facts = $this->catalog->pricingFacts($productId);
 
-        if ($facts === null) {
-            return null;
-        }
+        return $facts === null ? null : $this->toProduct($facts);
+    }
 
+    public function findMany(array $productIds): array
+    {
+        return array_map($this->toProduct(...), $this->catalog->pricingFactsFor($productIds));
+    }
+
+    private function toProduct(ProductPricingFacts $facts): PricingProduct
+    {
         return new PricingProduct(
             $facts->productId,
             $facts->name,
