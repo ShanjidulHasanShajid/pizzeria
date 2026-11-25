@@ -31,7 +31,7 @@ final class ContentTrash implements TrashSource
             'manage-content',
         ), ContentType::cases());
 
-        $kinds[] = new TrashKind(self::LOCATION, 'Locations', 'Location', 'admin.locations', 'The location is deleted for good. Old orders keep their own copy of its name.', 'manage-content');
+        $kinds[] = new TrashKind(self::LOCATION, 'Locations', 'Location', 'admin.locations', 'The location is deleted for good. This only works when no delivery zone belongs to it, also none in the Trash. Old orders keep their own copy of its name.', 'manage-content');
 
         return $kinds;
     }

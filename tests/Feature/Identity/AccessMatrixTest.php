@@ -104,6 +104,12 @@ it('applies the access matrix', function (?string $role, string $uri, int $statu
     ['staff', '/admin/locations', 403],
     ['admin', '/admin/locations', 200],
     ['super_admin', '/admin/locations', 200],
+    // delivery zones (Phase 12)
+    [null, '/admin/delivery-zones', 302],
+    ['customer', '/admin/delivery-zones', 403],
+    ['staff', '/admin/delivery-zones', 403],
+    ['admin', '/admin/delivery-zones', 200],
+    ['super_admin', '/admin/delivery-zones', 200],
 ]);
 
 it('sends a guest who opens the admin area to the login page', function (): void {

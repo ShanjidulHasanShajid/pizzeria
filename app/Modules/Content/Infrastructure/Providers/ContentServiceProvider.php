@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Content\Infrastructure\Providers;
 
 use App\Modules\Content\Application\Ports\HomeCatalog;
+use App\Modules\Content\Application\Ports\LocationUsage;
 use App\Modules\Content\Application\Queries\BranchScheduleQuery;
 use App\Modules\Content\Application\Queries\ContentQuery;
 use App\Modules\Content\Application\Queries\HomePageQuery;
@@ -19,6 +20,7 @@ use App\Modules\Content\Domain\Repositories\LocationRepository;
 use App\Modules\Content\Domain\Repositories\NavItemRepository;
 use App\Modules\Content\Domain\Repositories\SettingsRepository;
 use App\Modules\Content\Infrastructure\Adapters\CatalogHomeCatalog;
+use App\Modules\Content\Infrastructure\Adapters\OrderingLocationUsage;
 use App\Modules\Content\Infrastructure\Persistence\Repositories\CachedContentItemRepository;
 use App\Modules\Content\Infrastructure\Persistence\Repositories\CachedHomeLayoutRepository;
 use App\Modules\Content\Infrastructure\Persistence\Repositories\CachedLocationRepository;
@@ -59,6 +61,7 @@ final class ContentServiceProvider extends ModuleServiceProvider
         LocationRepository::class => CachedLocationRepository::class,
         LocationQuery::class => RepositoryLocationQuery::class,
         BranchScheduleQuery::class => RepositoryBranchScheduleQuery::class,
+        LocationUsage::class => OrderingLocationUsage::class,
         SiteLayoutQuery::class => CatalogSiteLayoutQuery::class,
         HomePageQuery::class => CatalogHomePageQuery::class,
         TrashedContentQuery::class => EloquentTrashedContentQuery::class,

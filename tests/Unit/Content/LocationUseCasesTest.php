@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Content\Application\DTOs\LocationIdInput;
 use App\Modules\Content\Application\DTOs\ReorderLocationsInput;
 use App\Modules\Content\Application\DTOs\SaveLocationInput;
+use App\Modules\Content\Application\Ports\LocationUsage;
 use App\Modules\Content\Application\Services\LocationInputReader;
 use App\Modules\Content\Application\UseCases\Locations\CreateLocation;
 use App\Modules\Content\Application\UseCases\Locations\DeleteLocation;
@@ -13,6 +14,7 @@ use App\Modules\Content\Application\UseCases\Locations\ReorderLocations;
 use App\Modules\Content\Application\UseCases\Locations\RestoreLocation;
 use App\Modules\Content\Application\UseCases\Locations\ToggleLocation;
 use App\Modules\Content\Application\UseCases\Locations\UpdateLocation;
+use App\Modules\Content\Domain\Exceptions\LocationInUse;
 use App\Modules\Content\Infrastructure\Queries\RepositoryBranchScheduleQuery;
 use App\Modules\Shared\Domain\Exceptions\EntityNotFound;
 use App\Modules\Shared\Domain\Exceptions\ValidationFailed;
@@ -31,6 +33,20 @@ function locationForm(array $changes = []): SaveLocationInput
         'mapEmbed' => '', 'latitude' => '', 'longitude' => '', 'hours' => ['monday' => ['11:00', '23:00']],
         'isPickupAvailable' => true, 'isActive' => true, ...$changes,
     ]);
+}
+
+/** Says that every branch has (or has no) delivery zones. */
+function locationUsage(bool $hasZones): LocationUsage
+{
+    return new class($hasZones) implements LocationUsage
+    {
+        public function __construct(private readonly bool $hasZones) {}
+
+        public function hasDeliveryZones(int $locationId): bool
+        {
+            return $this->hasZones;
+        }
+    };
 }
 
 beforeEach(function (): void {
@@ -122,7 +138,7 @@ it('tells other modules when a branch is open; unknown and switched-off ones nev
 
 it('deletes a location of the Trash forever, and no other', function (): void {
     $input = new LocationIdInput(($this->create)());
-    $forceDelete = new ForceDeleteLocation($this->locations);
+    $forceDelete = new ForceDeleteLocation($this->locations, locationUsage(false));
 
     expect(fn () => $forceDelete->handle($input))->toThrow(EntityNotFound::class);
 
@@ -130,4 +146,14 @@ it('deletes a location of the Trash forever, and no other', function (): void {
     $forceDelete->handle($input);
 
     expect(fn () => (new RestoreLocation($this->locations))->handle($input))->toThrow(EntityNotFound::class);
+});
+
+it('does not delete a location forever while delivery zones belong to it', function (): void {
+    $input = new LocationIdInput(($this->create)());
+    (new DeleteLocation($this->locations))->handle($input);
+
+    expect(fn () => (new ForceDeleteLocation($this->locations, locationUsage(true)))->handle($input))->toThrow(LocationInUse::class);
+
+    (new RestoreLocation($this->locations))->handle($input);
+    expect($this->locations->all())->toHaveCount(1);
 });

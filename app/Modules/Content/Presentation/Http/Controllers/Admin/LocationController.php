@@ -14,6 +14,7 @@ use App\Modules\Content\Application\UseCases\Locations\ReorderLocations;
 use App\Modules\Content\Application\UseCases\Locations\RestoreLocation;
 use App\Modules\Content\Application\UseCases\Locations\ToggleLocation;
 use App\Modules\Content\Application\UseCases\Locations\UpdateLocation;
+use App\Modules\Content\Domain\Exceptions\LocationInUse;
 use App\Modules\Content\Presentation\Http\Controllers\Admin\Concerns\RunsContentActions;
 use App\Modules\Content\Presentation\Http\Requests\LocationRequest;
 use App\Modules\Content\Presentation\Http\Requests\ReorderRequest;
@@ -86,7 +87,11 @@ final class LocationController
 
     public function forceDestroy(int $location, ForceDeleteLocation $forceDelete): RedirectResponse
     {
-        $this->runAction(fn () => $forceDelete->handle(new LocationIdInput($location)));
+        try {
+            $this->runAction(fn () => $forceDelete->handle(new LocationIdInput($location)));
+        } catch (LocationInUse $refused) {
+            return back()->with('error', $refused->getMessage());
+        }
 
         return back()->with('success', 'Location deleted forever.');
     }
