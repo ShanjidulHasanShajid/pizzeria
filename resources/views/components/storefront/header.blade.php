@@ -1,7 +1,4 @@
 @props(['siteName', 'logoUrl' => null])
-@php
-    $cartCount = 3; // fake until the cart exists (Phase 11)
-@endphp
 <header class="border-b border-line bg-white">
     <div class="page-container flex items-center gap-3 py-3 md:gap-6">
         <button type="button" class="-ml-2 p-2 text-ink lg:hidden" aria-label="Open menu" x-on:click="drawer = true">
@@ -22,10 +19,7 @@
                     <x-icon name="user" class="h-5 w-5" /> Sign in
                 </a>
             @endauth
-            <a href="{{ route('cart.show') }}" class="relative rounded-btn p-2 hover:bg-brand-50" aria-label="Cart, {{ $cartCount }} items">
-                <x-icon name="shopping-bag" class="h-6 w-6" />
-                <span class="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-xs font-bold text-white" aria-hidden="true">{{ $cartCount }}</span>
-            </a>
+            <livewire:cart.cart-counter placement="header" />
         </div>
     </div>
 </header>

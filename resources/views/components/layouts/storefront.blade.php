@@ -37,6 +37,7 @@
 
     <x-storefront.footer :settings="$site->settings" :locations="$site->locations" :logo-url="$logoUrl" />
     <x-storefront.bottom-bar />
+    <livewire:cart.mini-cart />
 
     @livewireScripts
     {{ $scripts ?? '' }}
