@@ -10,6 +10,7 @@ use App\Modules\Cart\Application\DTOs\MergeGuestCartInput;
 use App\Modules\Cart\Application\DTOs\RemoveLineInput;
 use App\Modules\Cart\Application\Services\CartEditor;
 use App\Modules\Cart\Application\Services\CartPricer;
+use App\Modules\Cart\Application\UseCases\AcceptCurrentPrices;
 use App\Modules\Cart\Application\UseCases\AddStandardItem;
 use App\Modules\Cart\Application\UseCases\ChangeLineNote;
 use App\Modules\Cart\Application\UseCases\ChangeLineQuantity;
@@ -51,7 +52,9 @@ beforeEach(function (): void {
     $this->changeNote = new ChangeLineNote($editor);
     $this->remove = new RemoveLine($editor);
     $this->clear = new ClearCart($editor);
-    $this->cart = fn () => (new GetPricedCart($this->context, $this->carts, new CartPricer($this->pricing, $products)))->handle();
+    $pricer = new CartPricer($this->pricing, $products);
+    $this->acceptPrices = new AcceptCurrentPrices($editor, $pricer);
+    $this->cart = fn () => (new GetPricedCart($this->context, $this->carts, $pricer))->handle();
     $this->merge = new MergeGuestCart($this->context, $this->carts, $transactions);
 });
 
@@ -196,6 +199,7 @@ describe('a visitor without a cart', function (): void {
 
     it('can change nothing', function (): void {
         $this->clear->handle();
+        $this->acceptPrices->handle();
 
         expect(fn () => $this->remove->handle(new RemoveLineInput(1)))->toThrow(CartRejected::class, 'not in your cart');
         expect(fn () => $this->changeQuantity->handle(new ChangeLineQuantityInput(1, 2)))->toThrow(CartRejected::class);
@@ -249,6 +253,25 @@ describe('re-pricing', function (): void {
         $this->remove->handle(new RemoveLineInput(($this->cart)()->lines[0]->lineId));
 
         expect(($this->cart)()->canCheckOut())->toBeTrue();
+    });
+
+    it('ends the notice when the customer accepts the new price', function (): void {
+        $this->pricing->taka[101] = 500;
+        $this->acceptPrices->handle();
+
+        $cart = ($this->cart)();
+
+        expect($cart->lines[0]->status)->toBe(CartLineStatus::Ok)
+            ->and($cart->lines[0]->lastUnitPrice->poisha())->toBe(50_000)
+            ->and($cart->subtotal->poisha())->toBe(185_000);
+    });
+
+    it('keeps the last seen price of an unavailable line', function (): void {
+        unset($this->pricing->taka[101]);
+        $this->acceptPrices->handle();
+
+        expect(($this->cart)()->lines[0]->status)->toBe(CartLineStatus::Unavailable)
+            ->and(($this->cart)()->lines[0]->lastUnitPrice->poisha())->toBe(45_000);
     });
 
     it('asks for all prices at once', function (): void {

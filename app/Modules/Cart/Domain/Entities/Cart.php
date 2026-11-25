@@ -8,6 +8,7 @@ use App\Modules\Cart\Domain\Exceptions\CartRejected;
 use App\Modules\Cart\Domain\ValueObjects\CartOwner;
 use App\Modules\Cart\Domain\ValueObjects\KitchenNote;
 use App\Modules\Shared\Domain\Entities\AggregateRoot;
+use App\Modules\Shared\Domain\ValueObjects\Money;
 use App\Modules\Shared\Domain\ValueObjects\Quantity;
 
 /**
@@ -81,6 +82,12 @@ final class Cart extends AggregateRoot
         }
 
         $line->changeNote($note);
+    }
+
+    /** The customer has seen this price of the line now. */
+    public function rememberUnitPrice(int $lineId, Money $unitPrice): void
+    {
+        $this->line($lineId)->rememberUnitPrice($unitPrice);
     }
 
     public function removeLine(int $lineId): void

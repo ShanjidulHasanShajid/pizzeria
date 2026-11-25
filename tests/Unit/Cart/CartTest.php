@@ -148,6 +148,7 @@ describe('changing', function (): void {
         'quantity' => [fn (Cart $cart) => $cart->changeQuantity(99, Quantity::of(2))],
         'note' => [fn (Cart $cart) => $cart->changeNote(99, KitchenNote::none())],
         'remove' => [fn (Cart $cart) => $cart->removeLine(99)],
+        'seen price' => [fn (Cart $cart) => $cart->rememberUnitPrice(99, Money::zero())],
     ])->throws(CartRejected::class, 'not in your cart');
 });
 
