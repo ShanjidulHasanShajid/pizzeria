@@ -1,6 +1,7 @@
 {{--
     $configuration: ProductConfiguration, or null when the product left the menu. $variant: the chosen size or null.
     $choices: group id => option ids. $line: PricedLineView, or null when the choice is refused ($problem says why).
+    $cartProblem: why the cart refused the item, or null.
 --}}
 @use('App\Modules\Customization\Presentation\Support\OptionGroupHint')
 @use('App\Modules\Shared\Domain\ValueObjects\Quantity')
@@ -116,10 +117,12 @@
                     <x-alert type="warning" class="w-full">{{ $problem }}</x-alert>
                 @endif
 
-                <div class="w-full">
-                    <x-button size="lg" class="w-full" disabled>Add to cart</x-button>
-                    <p class="mt-1 text-center text-xs text-muted">Online ordering opens soon.</p>
-                </div>
+                {{-- When the choice itself is refused, $problem says so already. --}}
+                @if ($cartProblem !== null && $problem === null)
+                    <x-alert type="error" class="w-full">{{ $cartProblem }}</x-alert>
+                @endif
+
+                <x-button size="lg" class="w-full" wire:click="addToCart" wire:loading.attr="disabled" wire:target="addToCart" :disabled="$line === null">Add to cart</x-button>
             </div>
 
             @if ($line && $line->options !== [])

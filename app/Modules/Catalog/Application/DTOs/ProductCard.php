@@ -21,6 +21,7 @@ final readonly class ProductCard
      * @param  list<TagBadge>  $tags
      * @param  bool  $isAvailable  false shows the disabled "Sold out" state
      * @param  bool  $hasOptions  has at least one active option group (crust, toppings ...)
+     * @param  ?int  $onlyVariantId  the variant of a product with exactly one; null when there is a choice
      */
     public function __construct(
         public int $id,
@@ -39,5 +40,6 @@ final readonly class ProductCard
         public LeadTimeClass $leadTimeClass,
         public bool $isAvailable,
         public bool $hasOptions,
+        public ?int $onlyVariantId,
     ) {}
 }

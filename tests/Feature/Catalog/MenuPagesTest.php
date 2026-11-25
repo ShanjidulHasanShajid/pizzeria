@@ -151,7 +151,7 @@ it('draws the cards with real data', function (): void {
         'New', 'Hot', 'Rich Pizza', 'Contains Nuts', 'Personal', 'Large', 'From', '৳450', 'Choose options',
         'Sold out', 'Gone Pizza', 'disabled',
         'Combo', 'Customize combo',
-        'Plain Bread', 'View details',
+        'Plain Bread', 'Add to cart',
     ]);
 });
 

@@ -6,6 +6,7 @@ namespace App\Modules\Customization\Infrastructure\Providers;
 
 use App\Modules\Customization\Application\Ports\CustomizableProducts;
 use App\Modules\Customization\Application\Ports\PricingProductSource;
+use App\Modules\Customization\Application\Ports\ShoppingCart;
 use App\Modules\Customization\Application\Ports\SizeTiers;
 use App\Modules\Customization\Application\Queries\AdminOptionQuery;
 use App\Modules\Customization\Application\Queries\OptionPriceUsageQuery;
@@ -14,6 +15,7 @@ use App\Modules\Customization\Application\Queries\ProductOptionsQuery;
 use App\Modules\Customization\Application\Queries\TrashedOptionsQuery;
 use App\Modules\Customization\Domain\Repositories\OptionGroupRepository;
 use App\Modules\Customization\Domain\Repositories\ProductOptionGroupRepository;
+use App\Modules\Customization\Infrastructure\Adapters\CartShoppingCart;
 use App\Modules\Customization\Infrastructure\Adapters\CatalogCustomizableProducts;
 use App\Modules\Customization\Infrastructure\Adapters\CatalogPricingProductSource;
 use App\Modules\Customization\Infrastructure\Adapters\CatalogSizeTiers;
@@ -45,6 +47,7 @@ final class CustomizationServiceProvider extends ModuleServiceProvider
         PricingProductSource::class => CatalogPricingProductSource::class,
         CustomizableProducts::class => CatalogCustomizableProducts::class,
         SizeTiers::class => CatalogSizeTiers::class,
+        ShoppingCart::class => CartShoppingCart::class,
     ];
 
     protected function moduleName(): string
