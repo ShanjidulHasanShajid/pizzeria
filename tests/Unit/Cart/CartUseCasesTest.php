@@ -8,6 +8,7 @@ use App\Modules\Cart\Application\DTOs\ChangeLineNoteInput;
 use App\Modules\Cart\Application\DTOs\ChangeLineQuantityInput;
 use App\Modules\Cart\Application\DTOs\MergeGuestCartInput;
 use App\Modules\Cart\Application\DTOs\RemoveLineInput;
+use App\Modules\Cart\Application\Listeners\MergeCartOnLogin;
 use App\Modules\Cart\Application\Services\CartEditor;
 use App\Modules\Cart\Application\Services\CartPricer;
 use App\Modules\Cart\Application\UseCases\AcceptCurrentPrices;
@@ -15,13 +16,16 @@ use App\Modules\Cart\Application\UseCases\AddStandardItem;
 use App\Modules\Cart\Application\UseCases\ChangeLineNote;
 use App\Modules\Cart\Application\UseCases\ChangeLineQuantity;
 use App\Modules\Cart\Application\UseCases\ClearCart;
+use App\Modules\Cart\Application\UseCases\DeleteOldGuestCarts;
 use App\Modules\Cart\Application\UseCases\GetPricedCart;
 use App\Modules\Cart\Application\UseCases\MergeGuestCart;
 use App\Modules\Cart\Application\UseCases\RemoveLine;
 use App\Modules\Cart\Domain\Enums\CartLineStatus;
 use App\Modules\Cart\Domain\Exceptions\CartRejected;
 use App\Modules\Cart\Domain\ValueObjects\CartOwner;
+use App\Modules\Identity\Application\Events\UserLoggedIn;
 use App\Modules\Shared\Domain\Exceptions\InvalidValue;
+use App\Modules\Shared\Infrastructure\Adapters\FrozenClock;
 use Tests\Unit\Cart\Fakes\FakeCartContext;
 use Tests\Unit\Cart\Fakes\FakeLinePricing;
 use Tests\Unit\Cart\Fakes\InMemoryCartProducts;
@@ -334,7 +338,7 @@ describe('merging after login', function (): void {
         ($this->add)(101, 2);
         $guest = $this->context->guest;
         ($this->login)();
-        $this->context->guest = $guest; // a second login request with the old session
+        $this->context->guest = $guest; // a second login request with the old cookie
         ($this->login)();
 
         expect($this->carts->find($this->customer)->lines()[0]->quantity()->value())->toBe(2);
@@ -343,5 +347,59 @@ describe('merging after login', function (): void {
     it('creates no customer cart for a visitor who never had one', function (): void {
         expect(($this->login)())->toBe(0)
             ->and($this->carts->count())->toBe(0);
+    });
+
+    it('happens when the user signs in', function (): void {
+        ($this->add)(101, 2);
+
+        (new MergeCartOnLogin($this->merge))->handle(new UserLoggedIn(7, new DateTimeImmutable));
+
+        expect($this->carts->find($this->customer)->lines())->toHaveCount(1);
+    });
+
+    it('never keeps anybody from signing in, and loses nothing when it fails', function (): void {
+        ($this->add)(101, 2);
+        $guest = $this->context->guest;
+        $this->carts->losesNewCarts = true;
+
+        (new MergeCartOnLogin($this->merge))->handle(new UserLoggedIn(7, new DateTimeImmutable));
+
+        expect($this->context->guest)->toBe($guest)
+            ->and($this->carts->find($guest)->lines())->toHaveCount(1);
+    });
+});
+
+describe('the days of a guest cart', function (): void {
+    it('start again with every change', function (): void {
+        ($this->add)();
+        expect($this->context->renewals)->toBe(1);
+
+        $this->changeQuantity->handle(new ChangeLineQuantityInput(($this->cart)()->lines[0]->lineId, 3));
+        expect($this->context->renewals)->toBe(2);
+    });
+
+    it('do not start again by looking, or by a change that was refused', function (): void {
+        ($this->add)();
+        ($this->cart)();
+
+        expect(fn () => $this->remove->handle(new RemoveLineInput(99)))->toThrow(CartRejected::class);
+        expect($this->context->renewals)->toBe(1);
+    });
+
+    it('end after 5 days without a change, for guests only', function (): void {
+        $clock = FrozenClock::at('2026-11-25 10:00:00');
+        $old = CartOwner::guest(str_repeat('a', 40));
+        $fresh = CartOwner::guest(str_repeat('b', 40));
+        $customer = CartOwner::customer(7);
+
+        foreach ([[$old, '-5 days -1 second'], [$fresh, '-5 days'], [$customer, '-1 year']] as [$owner, $age]) {
+            $this->carts->createIfMissing($owner);
+            $this->carts->changedAt($owner, $clock->now()->modify($age));
+        }
+
+        expect((new DeleteOldGuestCarts($this->carts, $clock))->handle())->toBe(1)
+            ->and($this->carts->find($old))->toBeNull()
+            ->and($this->carts->find($fresh))->not->toBeNull()
+            ->and($this->carts->find($customer))->not->toBeNull();
     });
 });

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Identity\Presentation\Http\Controllers\Storefront;
 
 use App\Modules\Identity\Application\DTOs\RegisterCustomerData;
+use App\Modules\Identity\Application\UseCases\AnnounceLogin;
 use App\Modules\Identity\Application\UseCases\RegisterCustomer;
 use App\Modules\Identity\Presentation\Http\Requests\RegisterRequest;
 use Illuminate\Contracts\View\View;
@@ -18,7 +19,7 @@ final class RegisterController
         return view('identity::auth.register');
     }
 
-    public function store(RegisterRequest $request, RegisterCustomer $registerCustomer): RedirectResponse
+    public function store(RegisterRequest $request, RegisterCustomer $registerCustomer, AnnounceLogin $announceLogin): RedirectResponse
     {
         $data = $request->validated();
 
@@ -31,6 +32,7 @@ final class RegisterController
 
         Auth::loginUsingId($userId);
         $request->session()->regenerate();
+        $announceLogin->handle($userId);
 
         return redirect()
             ->intended(route('home'))
