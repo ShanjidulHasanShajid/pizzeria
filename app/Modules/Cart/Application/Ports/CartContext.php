@@ -18,8 +18,11 @@ interface CartContext
     /** Like current(), but a visitor without a token gets one. Only for adding something. */
     public function currentOrNew(): CartOwner;
 
-    /** The guest of this session, also right after logging in. Null when there is none. */
+    /** The guest of this browser, also right after logging in. Null when there is none. */
     public function guest(): ?CartOwner;
+
+    /** The guest cart was changed just now: its days start again. Does nothing for a customer. */
+    public function renewGuest(): void;
 
     /** The guest cart was taken over by the customer: forget its token. */
     public function forgetGuest(): void;

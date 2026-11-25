@@ -8,10 +8,12 @@ use App\Modules\Cart\Application\Ports\CartContext;
 use App\Modules\Cart\Domain\ValueObjects\CartOwner;
 
 /**
- * Says whose cart it is, without a session and without a login.
+ * Says whose cart it is, without a cookie and without a login.
  */
 final class FakeCartContext implements CartContext
 {
+    public int $renewals = 0;
+
     public function __construct(
         public ?CartOwner $customer = null,
         public ?CartOwner $guest = null,
@@ -30,6 +32,11 @@ final class FakeCartContext implements CartContext
     public function guest(): ?CartOwner
     {
         return $this->guest;
+    }
+
+    public function renewGuest(): void
+    {
+        $this->renewals++;
     }
 
     public function forgetGuest(): void

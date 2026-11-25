@@ -9,6 +9,7 @@ use App\Modules\Cart\Domain\Repositories\CartRepository;
 use App\Modules\Cart\Domain\ValueObjects\CartOwner;
 use App\Modules\Cart\Infrastructure\Persistence\Mappers\CartMapper;
 use App\Modules\Cart\Infrastructure\Persistence\Models\Cart as CartModel;
+use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -82,6 +83,14 @@ final class EloquentCartRepository implements CartRepository
     {
         // cart_lines has cascadeOnDelete: the database removes the lines too.
         CartModel::query()->whereKey($cart->id())->delete();
+    }
+
+    public function deleteGuestCartsUnchangedSince(DateTimeImmutable $moment): int
+    {
+        return (int) CartModel::query()
+            ->whereNotNull('guest_token')
+            ->where('updated_at', '<', $moment)
+            ->delete();
     }
 
     /**

@@ -20,6 +20,9 @@ final class Cart extends AggregateRoot
 {
     public const MAX_LINES = 30;
 
+    /** A guest cart lives this long after its last change (owner-decided 2026-11-25). */
+    public const GUEST_LIFETIME_DAYS = 5;
+
     /**
      * @param  list<CartLine>  $lines
      */

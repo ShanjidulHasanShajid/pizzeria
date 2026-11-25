@@ -8,6 +8,7 @@ use App\Modules\Cart\Domain\Entities\Cart;
 use App\Modules\Cart\Domain\Entities\CartLine;
 use App\Modules\Cart\Domain\Repositories\CartRepository;
 use App\Modules\Cart\Domain\ValueObjects\CartOwner;
+use DateTimeImmutable;
 
 /**
  * A CartRepository in an array, for use case tests. Copies in, copies out, and it gives
@@ -21,6 +22,12 @@ final class InMemoryCartRepository implements CartRepository
     private int $nextCartId = 1;
 
     private int $nextLineId = 1;
+
+    /** @var array<int, DateTimeImmutable> cart id => last change, only for carts set with changedAt() */
+    private array $changedAt = [];
+
+    /** As if another request removed every new cart at once. */
+    public bool $losesNewCarts = false;
 
     /** @var list<CartOwner> the owners in the order they were locked */
     public array $locked = [];
@@ -38,7 +45,7 @@ final class InMemoryCartRepository implements CartRepository
 
     public function createIfMissing(CartOwner $owner): void
     {
-        if ($this->find($owner) === null) {
+        if ($this->find($owner) === null && ! $this->losesNewCarts) {
             $id = $this->nextCartId++;
             $this->carts[$id] = Cart::reconstitute($id, $owner, []);
         }
@@ -59,7 +66,22 @@ final class InMemoryCartRepository implements CartRepository
         unset($this->carts[$cart->id()]);
     }
 
+    public function deleteGuestCartsUnchangedSince(DateTimeImmutable $moment): int
+    {
+        $before = count($this->carts);
+        $this->carts = array_filter($this->carts, fn (Cart $cart): bool => ! $cart->owner()->isGuest()
+            || ! isset($this->changedAt[$cart->id()])
+            || $this->changedAt[$cart->id()] >= $moment);
+
+        return $before - count($this->carts);
+    }
+
     // Test helper (not part of the interface)
+
+    public function changedAt(CartOwner $owner, DateTimeImmutable $moment): void
+    {
+        $this->changedAt[(int) $this->find($owner)?->id()] = $moment;
+    }
 
     public function count(): int
     {

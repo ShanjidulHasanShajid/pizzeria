@@ -7,7 +7,7 @@ namespace App\Modules\Cart\Domain\ValueObjects;
 use App\Modules\Shared\Domain\Exceptions\InvalidValue;
 
 /**
- * Whose cart it is: a logged-in customer (user id) or a guest (a secret token kept in the session).
+ * Whose cart it is: a logged-in customer (user id) or a guest (a secret token kept in a cookie).
  * Always exactly one of the two.
  */
 final readonly class CartOwner

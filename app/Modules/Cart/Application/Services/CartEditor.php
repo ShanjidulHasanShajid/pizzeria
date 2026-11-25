@@ -55,7 +55,7 @@ final class CartEditor
      */
     private function lockAndChange(CartOwner $owner, callable $change): bool
     {
-        return $this->transactions->run(function () use ($owner, $change): bool {
+        $wasChanged = $this->transactions->run(function () use ($owner, $change): bool {
             $this->carts->lock($owner);
             $cart = $this->carts->find($owner);
 
@@ -68,5 +68,11 @@ final class CartEditor
 
             return true;
         });
+
+        if ($wasChanged) {
+            $this->context->renewGuest();
+        }
+
+        return $wasChanged;
     }
 }

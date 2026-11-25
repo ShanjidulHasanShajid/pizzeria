@@ -6,6 +6,7 @@ namespace App\Modules\Cart\Domain\Repositories;
 
 use App\Modules\Cart\Domain\Entities\Cart;
 use App\Modules\Cart\Domain\ValueObjects\CartOwner;
+use DateTimeImmutable;
 
 /**
  * The saved carts, one per owner. A cart is always loaded and saved as a whole, with its lines.
@@ -32,4 +33,7 @@ interface CartRepository
 
     /** Deletes the cart with its lines for good. */
     public function delete(Cart $cart): void;
+
+    /** Deletes guest carts whose last change was before this moment. Returns how many. */
+    public function deleteGuestCartsUnchangedSince(DateTimeImmutable $moment): int;
 }
