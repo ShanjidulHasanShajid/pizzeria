@@ -8,6 +8,7 @@ use App\Modules\Catalog\Application\Ports\ProductOptions;
 use App\Modules\Catalog\Application\Ports\SizeTierPrices;
 use App\Modules\Catalog\Application\Queries\AdminCatalogQuery;
 use App\Modules\Catalog\Application\Queries\MenuQuery;
+use App\Modules\Catalog\Application\Queries\ProductSummaryQuery;
 use App\Modules\Catalog\Application\Queries\SitemapQuery;
 use App\Modules\Catalog\Application\Queries\StorefrontCatalogQuery;
 use App\Modules\Catalog\Domain\Repositories\CategoryRepository;
@@ -24,6 +25,7 @@ use App\Modules\Catalog\Infrastructure\Persistence\Repositories\EloquentSizeTier
 use App\Modules\Catalog\Infrastructure\Persistence\Repositories\EloquentTagRepository;
 use App\Modules\Catalog\Infrastructure\Queries\EloquentAdminCatalogQuery;
 use App\Modules\Catalog\Infrastructure\Queries\EloquentMenuQuery;
+use App\Modules\Catalog\Infrastructure\Queries\EloquentProductSummaryQuery;
 use App\Modules\Catalog\Infrastructure\Queries\EloquentSitemapQuery;
 use App\Modules\Catalog\Infrastructure\Queries\EloquentStorefrontCatalogQuery;
 use App\Modules\Shared\Infrastructure\Providers\ModuleServiceProvider;
@@ -49,6 +51,7 @@ final class CatalogServiceProvider extends ModuleServiceProvider
         AdminCatalogQuery::class => EloquentAdminCatalogQuery::class,
         MenuQuery::class => EloquentMenuQuery::class,
         SitemapQuery::class => EloquentSitemapQuery::class,
+        ProductSummaryQuery::class => EloquentProductSummaryQuery::class,
         SizeTierPrices::class => CustomizationSizeTierPrices::class,
         ProductOptions::class => CustomizationProductOptions::class,
     ];

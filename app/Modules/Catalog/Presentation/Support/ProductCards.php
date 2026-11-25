@@ -19,11 +19,13 @@ final class ProductCards
     public function __construct(private readonly FileStorage $files) {}
 
     /**
-     * @return array{name: string, slug: string, description: string, price: int, isFromPrice: bool, state: string, badges: list<array{variant: string, label: string}>, sizes: list<string>, tags: list<array{label: string, icon: ?string, class: string}>, image: string}
+     * @return array{id: int, variantId: ?int, name: string, slug: string, description: string, price: int, isFromPrice: bool, state: string, badges: list<array{variant: string, label: string}>, sizes: list<string>, tags: list<array{label: string, icon: ?string, class: string}>, image: string}
      */
     public function toArray(ProductCard $card): array
     {
         return [
+            'id' => $card->id,
+            'variantId' => $card->onlyVariantId,
             'name' => $card->name,
             'slug' => $card->slug,
             'description' => $card->shortDescription ?? '',
@@ -46,15 +48,15 @@ final class ProductCards
     }
 
     /**
-     * "view" is a product with nothing to choose. Its button becomes "Add to cart" in Phase 11.
+     * "add" is a product with nothing to choose: it goes straight into the cart.
      */
     private function state(ProductCard $card): string
     {
         return match (true) {
             ! $card->isAvailable => 'soldout',
             $card->type === ProductType::Combo => 'combo',
-            $card->type === ProductType::Builder, $card->hasOptions, count($card->variantLabels) > 1 => 'options',
-            default => 'view',
+            $card->type === ProductType::Builder, $card->hasOptions, $card->onlyVariantId === null => 'options',
+            default => 'add',
         };
     }
 

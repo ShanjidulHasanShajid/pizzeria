@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Modules\Cart\Application\DTOs\PricedCart;
+use App\Modules\Cart\Application\DTOs\PricedCartOption;
+use App\Modules\Cart\Application\UseCases\GetPricedCart;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Category as CategoryModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\Product as ProductModel;
 use App\Modules\Catalog\Infrastructure\Persistence\Models\ProductVariant as ProductVariantModel;
@@ -185,9 +188,82 @@ it('says so when the item sells out or leaves the menu while the page is open', 
     $component->call('more')->assertOk()->assertSee('not on the menu any more');
 });
 
-it('cannot put anything into a cart yet', function (): void {
-    // Livewire writes comments (<!--[if BLOCK]> ...) between the tag and the text.
-    expect(($this->withCrust)()->html())->toMatch('#<button[^>]* disabled="disabled"[^>]*>(?:\s|<!--.*?-->)*Add to cart#');
+describe('adding to the cart', function (): void {
+    beforeEach(function (): void {
+        $this->cart = fn (): PricedCart => app(GetPricedCart::class)->handle();
+    });
+
+    it('puts the item with its choices, quantity and note into the cart', function (): void {
+        ($this->withCrust)()
+            ->set("multiple.{$this->toppings}", [(string) $this->beef, (string) $this->corn])
+            ->set('note', 'less spicy')
+            ->call('more')
+            ->call('addToCart')
+            ->assertDispatched('cart-changed')
+            ->assertDispatched('cart-item-added');
+
+        $line = ($this->cart)()->lines[0];
+
+        expect($line->productName)->toBe('Margherita')
+            ->and($line->variantLabel)->toBe('Medium')
+            ->and(array_map(fn (PricedCartOption $option): string => $option->name, $line->options))->toBe(['Thin', 'Corn', 'Beef'])
+            ->and($line->note)->toBe('less spicy')
+            ->and($line->quantity)->toBe(2)
+            ->and($line->lineTotal->poisha())->toBe(124_000);
+    });
+
+    it('starts again with one and no note, and keeps the picks', function (): void {
+        ($this->withCrust)()->set('note', 'less spicy')->call('more')->call('addToCart')
+            ->assertSet('quantity', 1)
+            ->assertSet('note', '')
+            ->assertSet("single.{$this->crust}", (string) $this->thin);
+    });
+
+    it('cannot be clicked while a required choice is missing, and the server refuses it too', function (): void {
+        // Livewire writes comments (<!--[if BLOCK]> ...) between the tag and the text.
+        $button = '#<button[^>]* disabled="disabled"[^>]*>(?:\s|<!--.*?-->)*Add to cart#';
+        $component = ($this->component)();
+
+        expect($component->html())->toMatch($button);
+
+        $component->call('addToCart')->assertNotDispatched('cart-item-added')->assertSee('Please choose: Crust.');
+
+        expect(($this->cart)()->isEmpty())->toBeTrue()
+            ->and(($this->withCrust)()->html())->not->toMatch($button);
+    });
+
+    it('says why the cart refuses the item', function (): void {
+        $component = ($this->withCrust)();
+
+        foreach (range(1, 14) as $click) {
+            $component->call('more');
+        }
+
+        $component->call('addToCart'); // 15 of them
+        ($this->withCrust)()
+            ->call('more')->call('more')->call('more')->call('more')->call('more')
+            ->call('addToCart') // 6 more
+            ->assertNotDispatched('cart-item-added')
+            ->assertSee('at most 20 of the same item')
+            ->assertSet('quantity', 6);
+
+        expect(($this->cart)()->itemCount())->toBe(15);
+    });
+
+    it('refuses a note that is too long for the field', function (): void {
+        ($this->withCrust)()->set('note', str_repeat('a', 201))->call('addToCart')
+            ->assertSee('at most 200 characters')
+            ->assertNotDispatched('cart-changed');
+    });
+
+    it('refuses a product that sold out while the page was open', function (): void {
+        $component = ($this->withCrust)();
+        $this->product->update(['is_available' => false]);
+
+        $component->call('addToCart')->assertNotDispatched('cart-changed')->assertSee('is sold out right now');
+
+        expect(($this->cart)()->isEmpty())->toBeTrue();
+    });
 });
 
 it('gives the configuration of visible products only', function (): void {

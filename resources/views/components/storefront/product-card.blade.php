@@ -3,7 +3,7 @@
 @inject('cards', 'App\Modules\Catalog\Presentation\Support\ProductCards')
 @php
     $product = is_array($product) ? $product : $cards->toArray($product);
-    $state = $product['state']; // view | options | combo | soldout
+    $state = $product['state']; // add | options | combo | soldout
     $soldOut = $state === 'soldout';
     $url = route('products.show', $product['slug']);
 @endphp
@@ -54,8 +54,9 @@
             <x-money :amount="$product['price']" :from="$product['isFromPrice']" />
 
             @switch($state)
-                @case('view')
-                    <x-link-button :href="$url" variant="outline" size="sm">View details</x-link-button>
+                @case('add')
+                    {{-- The mini cart listens (MiniCart::add). Throttled, so that a double click adds one. --}}
+                    <x-button size="sm" x-on:click.throttle.1000ms="$dispatch('add-to-cart', { productId: {{ $product['id'] }}, variantId: {{ $product['variantId'] }} })" :aria-label="'Add '.$product['name'].' to cart'">Add to cart</x-button>
                     @break
                 @case('options')
                     <x-link-button :href="$url" variant="outline" size="sm">Choose options</x-link-button>

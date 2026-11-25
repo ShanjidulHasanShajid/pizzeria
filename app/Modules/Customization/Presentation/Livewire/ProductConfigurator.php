@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Modules\Customization\Presentation\Livewire;
 
+use App\Modules\Customization\Application\DTOs\AddToCartInput;
 use App\Modules\Customization\Application\DTOs\ConfigurableVariant;
 use App\Modules\Customization\Application\DTOs\PricedLineView;
 use App\Modules\Customization\Application\DTOs\ProductConfiguration;
 use App\Modules\Customization\Application\DTOs\QuoteLineInput;
+use App\Modules\Customization\Application\Ports\ShoppingCart;
 use App\Modules\Customization\Application\Queries\ProductConfigurationQuery;
 use App\Modules\Customization\Application\UseCases\QuoteLine;
 use App\Modules\Customization\Domain\Exceptions\PricingFailed;
@@ -41,8 +43,11 @@ final class ProductConfigurator extends Component
     #[Locked]
     public int $quantity = Quantity::MIN;
 
-    /** For the kitchen. Saved with the cart line in Phase 11. */
+    /** For the kitchen. Goes into the cart with the item. */
     public string $note = '';
+
+    /** Why the cart refused the item (full, too many of it ...). */
+    private ?string $cartProblem = null;
 
     private ProductConfigurationQuery $query;
 
@@ -104,6 +109,26 @@ final class ProductConfigurator extends Component
         $this->quantity = max(Quantity::MIN, $this->quantity - 1);
     }
 
+    /**
+     * The picks stay, because another one like this is the likely next wish; quantity and note start again.
+     * The mini cart opens on "cart-item-added", the counters read again on "cart-changed".
+     */
+    public function addToCart(ShoppingCart $cart): void
+    {
+        try {
+            $cart->add(new AddToCartInput($this->productId, $this->selectedVariantId(), $this->choices(), $this->quantity, $this->note));
+        } catch (DomainException $refused) {
+            $this->cartProblem = $refused->getMessage();
+
+            return;
+        }
+
+        $this->quantity = Quantity::MIN;
+        $this->note = '';
+        $this->dispatch('cart-changed');
+        $this->dispatch('cart-item-added');
+    }
+
     public function render(): View
     {
         $configuration = $this->configuration();
@@ -128,6 +153,7 @@ final class ProductConfigurator extends Component
             'line' => $line,
             'problem' => $problem,
             'problemGroupId' => $problemGroupId,
+            'cartProblem' => $this->cartProblem,
         ]);
     }
 

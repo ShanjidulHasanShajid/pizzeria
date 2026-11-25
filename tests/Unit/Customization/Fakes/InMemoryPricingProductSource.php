@@ -24,4 +24,9 @@ final class InMemoryPricingProductSource implements PricingProductSource
     {
         return $this->products[$productId] ?? null;
     }
+
+    public function findMany(array $productIds): array
+    {
+        return array_intersect_key($this->products, array_flip($productIds));
+    }
 }

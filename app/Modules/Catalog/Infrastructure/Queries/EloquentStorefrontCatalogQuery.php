@@ -168,25 +168,35 @@ final class EloquentStorefrontCatalogQuery implements StorefrontCatalogQuery
 
     public function pricingFacts(int $productId): ?ProductPricingFacts
     {
-        $product = ProductModel::query()->with('variants')->find($productId);
+        return $this->pricingFactsFor([$productId])[$productId] ?? null;
+    }
 
-        if ($product === null) {
-            return null;
+    public function pricingFactsFor(array $productIds): array
+    {
+        if ($productIds === []) {
+            return [];
         }
 
-        return new ProductPricingFacts(
-            productId: $product->id,
-            name: $product->name,
-            isVisible: $this->reader->visibleProducts()->whereKey($productId)->exists(),
-            isAvailable: $product->is_available,
-            variants: array_values($product->variants->sortBy('sort')->map(fn (ProductVariantModel $variant): VariantPricingFacts => new VariantPricingFacts(
-                id: $variant->id,
-                label: $variant->label,
-                price: Money::fromPoisha($variant->price),
-                sizeTierId: $variant->size_tier_id,
-                isAvailable: $variant->is_available,
-            ))->all()),
-        );
+        $visibleIds = $this->reader->visibleProducts()->whereKey($productIds)->pluck('id')->all();
+        $facts = [];
+
+        foreach (ProductModel::query()->with('variants')->whereKey($productIds)->get() as $product) {
+            $facts[$product->id] = new ProductPricingFacts(
+                productId: $product->id,
+                name: $product->name,
+                isVisible: in_array($product->id, $visibleIds, true),
+                isAvailable: $product->is_available,
+                variants: array_values($product->variants->sortBy('sort')->map(fn (ProductVariantModel $variant): VariantPricingFacts => new VariantPricingFacts(
+                    id: $variant->id,
+                    label: $variant->label,
+                    price: Money::fromPoisha($variant->price),
+                    sizeTierId: $variant->size_tier_id,
+                    isAvailable: $variant->is_available,
+                ))->all()),
+            );
+        }
+
+        return $facts;
     }
 
     /**

@@ -21,16 +21,16 @@ function shopCard(array $changes = []): ProductCard
         'id' => 1, 'slug' => 'margherita', 'name' => 'Margherita', 'shortDescription' => null, 'type' => ProductType::Standard,
         'fromPrice' => Money::fromTaka(590), 'hasSeveralPrices' => false, 'variantLabels' => ['Regular'], 'imagePath' => null,
         'tags' => [], 'isNew' => false, 'isHot' => false, 'leadTimeLabel' => '20 minutes', 'leadTimeClass' => LeadTimeClass::MadeToOrder,
-        'isAvailable' => true, 'hasOptions' => false, ...$changes,
+        'isAvailable' => true, 'hasOptions' => false, 'onlyVariantId' => 7, ...$changes,
     ]);
 }
 
 it('chooses the button by the kind of product', function (array $changes, string $state): void {
     expect(app(ProductCards::class)->toArray(shopCard($changes))['state'])->toBe($state);
 })->with([
-    'one size' => [[], 'view'],
+    'one size' => [[], 'add'],
     'one size, but options' => [['hasOptions' => true], 'options'],
-    'several sizes' => [['variantLabels' => ['Small', 'Large']], 'options'],
+    'several sizes' => [['variantLabels' => ['Small', 'Large'], 'onlyVariantId' => null], 'options'],
     'pizza builder' => [['type' => ProductType::Builder], 'options'],
     'combo' => [['type' => ProductType::Combo], 'combo'],
     'sold out combo' => [['type' => ProductType::Combo, 'isAvailable' => false], 'soldout'],
@@ -44,6 +44,8 @@ it('shows the price, the image and the badges', function (): void {
     ]));
 
     expect($plain['price'])->toBe(59_000)
+        ->and($plain['id'])->toBe(1)
+        ->and($plain['variantId'])->toBe(7)
         ->and($plain['description'])->toBe('')
         ->and($plain['badges'])->toBe([])
         ->and($plain['sizes'])->toBe([]) // one size needs no chip

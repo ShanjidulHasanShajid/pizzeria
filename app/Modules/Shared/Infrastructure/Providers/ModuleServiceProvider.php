@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Shared\Infrastructure\Providers;
 
+use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Routing\RouteRegistrar;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +36,7 @@ abstract class ModuleServiceProvider extends ServiceProvider
         $this->loadViewsFrom($this->modulePath('Presentation/Views'), $this->viewNamespace());
         $this->registerRoutes();
         $this->registerLivewireComponents();
+        $this->registerConsoleCommands();
     }
 
     protected function viewNamespace(): string
@@ -85,13 +87,48 @@ abstract class ModuleServiceProvider extends ServiceProvider
      */
     private function registerLivewireComponents(): void
     {
-        $directory = $this->modulePath('Presentation/Livewire');
+        foreach ($this->classesIn('Presentation/Livewire') as $relative => $class) {
+            if (! is_subclass_of($class, Component::class)) {
+                continue;
+            }
 
-        if (! is_dir($directory)) {
+            $parts = explode('\\', $relative);
+            $alias = Str::kebab($this->moduleName()).'.'.implode('.', array_map(Str::kebab(...), $parts));
+
+            Livewire::component($alias, $class);
+        }
+    }
+
+    /**
+     * Registers every Artisan command class found in Presentation/Console.
+     */
+    private function registerConsoleCommands(): void
+    {
+        if (! $this->app->runningInConsole()) {
             return;
         }
 
-        $namespace = 'App\\Modules\\'.$this->moduleName().'\\Presentation\\Livewire';
+        $this->commands(array_values(array_filter(
+            $this->classesIn('Presentation/Console'),
+            fn (string $class): bool => is_subclass_of($class, Command::class),
+        )));
+    }
+
+    /**
+     * The classes in a folder of this module and its sub-folders.
+     *
+     * @return array<string, string> name below the folder (Admin\OptionManager) => full class name
+     */
+    private function classesIn(string $folder): array
+    {
+        $directory = $this->modulePath($folder);
+
+        if (! is_dir($directory)) {
+            return [];
+        }
+
+        $namespace = 'App\\Modules\\'.$this->moduleName().'\\'.str_replace('/', '\\', $folder);
+        $classes = [];
         $files = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
         );
@@ -101,18 +138,11 @@ abstract class ModuleServiceProvider extends ServiceProvider
                 continue;
             }
 
-            $relative = substr($file->getPathname(), strlen($directory) + 1, -4);
-            $parts = explode('\\', str_replace('/', '\\', $relative));
-            $class = $namespace.'\\'.implode('\\', $parts);
-
-            if (! is_subclass_of($class, Component::class)) {
-                continue;
-            }
-
-            $alias = Str::kebab($this->moduleName()).'.'.implode('.', array_map(Str::kebab(...), $parts));
-
-            Livewire::component($alias, $class);
+            $relative = str_replace('/', '\\', substr($file->getPathname(), strlen($directory) + 1, -4));
+            $classes[$relative] = $namespace.'\\'.$relative;
         }
+
+        return $classes;
     }
 
     /**

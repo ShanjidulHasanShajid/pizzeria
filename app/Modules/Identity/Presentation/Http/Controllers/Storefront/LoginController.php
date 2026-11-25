@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Identity\Presentation\Http\Controllers\Storefront;
 
+use App\Modules\Identity\Application\UseCases\AnnounceLogin;
 use App\Modules\Identity\Application\UseCases\CheckLoginAllowed;
 use App\Modules\Identity\Domain\Enums\Ability;
 use App\Modules\Identity\Domain\Exceptions\AccountBlocked;
@@ -25,7 +26,7 @@ final class LoginController
         return view('identity::auth.login');
     }
 
-    public function store(LoginRequest $request, CheckLoginAllowed $checkLoginAllowed): RedirectResponse
+    public function store(LoginRequest $request, CheckLoginAllowed $checkLoginAllowed, AnnounceLogin $announceLogin): RedirectResponse
     {
         $request->authenticate();
 
@@ -38,6 +39,7 @@ final class LoginController
         }
 
         $request->session()->regenerate();
+        $announceLogin->handle((int) Auth::id());
 
         // Staff, admins and super admins start in the admin area.
         if (Gate::allows(Ability::AccessAdmin->value)) {

@@ -198,6 +198,7 @@ final class StorefrontReader
             leadTimeClass: $product->lead_time_class,
             isAvailable: $product->is_available && $available->isNotEmpty(),
             hasOptions: $hasOptions,
+            onlyVariantId: $variants->count() === 1 ? $variants->first()->id : null,
         );
     }
 

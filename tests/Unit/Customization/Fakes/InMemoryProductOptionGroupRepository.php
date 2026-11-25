@@ -38,6 +38,13 @@ final class InMemoryProductOptionGroupRepository implements ProductOptionGroupRe
         return $found;
     }
 
+    public function forProducts(array $productIds): array
+    {
+        sort($productIds);
+
+        return array_merge(...array_map($this->forProduct(...), $productIds));
+    }
+
     public function save(ProductOptionGroup $attachment): int
     {
         $id = $attachment->id() ?? $this->nextId;

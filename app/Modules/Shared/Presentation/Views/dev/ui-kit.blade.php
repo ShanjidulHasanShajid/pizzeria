@@ -176,8 +176,8 @@
         <h2 id="kit-cards" class="text-lg font-semibold">Product cards</h2>
         @php
             $kitCard = fn (array $changes): array => [
-                'name' => 'Garlic Bread', 'slug' => 'garlic-bread', 'description' => 'Freshly made to order with quality ingredients.',
-                'price' => 24000, 'isFromPrice' => false, 'state' => 'view', 'badges' => [], 'sizes' => [], 'tags' => [],
+                'id' => 0, 'variantId' => 0, 'name' => 'Garlic Bread', 'slug' => 'garlic-bread', 'description' => 'Freshly made to order with quality ingredients.',
+                'price' => 24000, 'isFromPrice' => false, 'state' => 'add', 'badges' => [], 'sizes' => [], 'tags' => [],
                 'image' => asset('images/placeholder.svg'), ...$changes,
             ];
         @endphp

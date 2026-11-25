@@ -22,8 +22,18 @@ final class EloquentProductOptionGroupRepository implements ProductOptionGroupRe
 
     public function forProduct(int $productId): array
     {
+        return $this->forProducts([$productId]);
+    }
+
+    public function forProducts(array $productIds): array
+    {
+        if ($productIds === []) {
+            return [];
+        }
+
         $models = ProductOptionGroupModel::query()
-            ->where('product_id', $productId)
+            ->whereIn('product_id', $productIds)
+            ->orderBy('product_id')
             ->orderBy('sort')
             ->orderBy('id')
             ->get();
